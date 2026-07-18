@@ -38,7 +38,7 @@ const tabs: { id: Tab; label: string; icon: typeof Building2 }[] = [
 ];
 
 function ProfilePage() {
-  const { t, lang, setLang } = useI18n();
+  const { t, locale, setLocale } = useI18n();
   const { theme, setTheme } = useTheme();
   const [tab, setTab] = useState<Tab>("company");
 
