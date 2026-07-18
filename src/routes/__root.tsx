@@ -83,14 +83,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Nova Pro is the AI-powered platform for exporters, importers and agricultural producers — real-time markets, weather intelligence and export operations.",
       },
-      { property: "og:title", content: "Nova Pro — AI for global agri-trade" },
+      { property: "og:title", content: "Nova Pro — AI intelligence for global agri-trade" },
       {
         property: "og:description",
         content:
-          "Real-time commodity markets, AI insights, weather intelligence and export operations in one premium workspace.",
+          "Nova Pro is the AI-powered platform for exporters, importers and agricultural producers — real-time markets, weather intelligence and export operations.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Nova Pro — AI intelligence for global agri-trade" },
+      { name: "twitter:description", content: "Nova Pro is the AI-powered platform for exporters, importers and agricultural producers — real-time markets, weather intelligence and export operations." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/5bf9eb28-425f-49e2-86a0-84f4d0b20bba/id-preview-d6d24087--39896f57-b586-43ca-92be-6c47ae6b7630.lovable.app-1784337274409.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/5bf9eb28-425f-49e2-86a0-84f4d0b20bba/id-preview-d6d24087--39896f57-b586-43ca-92be-6c47ae6b7630.lovable.app-1784337274409.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
