@@ -298,10 +298,10 @@ function ProfilePage() {
               {(["en", "ar"] as const).map((l) => (
                 <button
                   key={l}
-                  onClick={() => setLang(l)}
+                  onClick={() => setLocale(l)}
                   className={cn(
                     "px-4 py-2 rounded-xl border text-sm font-medium transition",
-                    lang === l ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-accent",
+                    locale === l ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-accent",
                   )}
                 >
                   {l === "en" ? "English" : "العربية"}
