@@ -135,7 +135,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <I18nProvider>
-          <Outlet />
+          <RoleProvider>
+            <Outlet />
+          </RoleProvider>
         </I18nProvider>
       </ThemeProvider>
     </QueryClientProvider>
