@@ -196,9 +196,18 @@ function NovaAiPage() {
 
   // Speech recognition (Web Speech API).
   const startListening = () => {
-    const SR: typeof SpeechRecognition | undefined =
-      (window as unknown as { SpeechRecognition?: typeof SpeechRecognition }).SpeechRecognition ??
-      (window as unknown as { webkitSpeechRecognition?: typeof SpeechRecognition }).webkitSpeechRecognition;
+    type SRCtor = new () => {
+      lang: string;
+      interimResults: boolean;
+      maxAlternatives: number;
+      onresult: (ev: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void;
+      onend: () => void;
+      onerror: () => void;
+      start: () => void;
+      stop: () => void;
+    };
+    const w = window as unknown as { SpeechRecognition?: SRCtor; webkitSpeechRecognition?: SRCtor };
+    const SR = w.SpeechRecognition ?? w.webkitSpeechRecognition;
     if (!SR) {
       toast.error("Voice input isn't supported in this browser");
       return;
