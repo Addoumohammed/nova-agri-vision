@@ -23,7 +23,8 @@ import {
   Plug,
   UserCircle2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { BrandMark, LocaleToggle, ThemeToggle } from "@/components/brand";
 import { RoleSwitcher } from "@/components/role-switcher";
