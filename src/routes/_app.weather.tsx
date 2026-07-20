@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   Cloud,
   CloudRain,
@@ -25,10 +26,22 @@ import {
 } from "recharts";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { getWeather } from "@/lib/public-apis.functions";
 
 export const Route = createFileRoute("/_app/weather")({
   component: WeatherPage,
 });
+
+type LiveCurrent = {
+  temp?: number;
+  feels_like?: number;
+  humidity?: number;
+  wind?: number;
+  desc?: string;
+  city?: string;
+  sunrise?: number;
+  sunset?: number;
+};
 
 const forecast = [
   { d: "Mon", t: 27, low: 18, i: Sun, r: 0 },
