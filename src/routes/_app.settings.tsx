@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Settings as SettingsIcon, Bell, Shield, CreditCard, Users, Globe2, Palette } from "lucide-react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -42,7 +43,7 @@ function SettingsPage() {
               <div><Label>Tax ID</Label><Input defaultValue="100-482-018" className="mt-1.5" /></div>
               <div className="md:col-span-2"><Label>Address</Label><Input defaultValue="24 Corniche El Nile, Cairo, Egypt" className="mt-1.5" /></div>
             </div>
-            <div className="mt-5 flex justify-end"><Button>Save changes</Button></div>
+            <div className="mt-5 flex justify-end"><Button onClick={() => toast.success("Company profile saved")}>Save changes</Button></div>
           </div>
 
           <div className="rounded-2xl border border-border bg-card p-6">
@@ -102,7 +103,7 @@ function SettingsPage() {
                 <Input type="password" placeholder="New" />
                 <Input type="password" placeholder="Confirm" />
               </div>
-              <div className="mt-4 flex justify-end"><Button>Update password</Button></div>
+              <div className="mt-4 flex justify-end"><Button onClick={() => toast.success("Password updated")}>Update password</Button></div>
             </div>
           </div>
         </TabsContent>
@@ -121,8 +122,8 @@ function SettingsPage() {
               </div>
             </div>
             <div className="mt-4 flex gap-2">
-              <Button variant="secondary" size="sm">Manage plan</Button>
-              <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-white/10">View invoices</Button>
+              <Button variant="secondary" size="sm" onClick={() => toast.message("Plan management", { description: "Opening billing portal…" })}>Manage plan</Button>
+              <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-white/10" onClick={() => toast.message("Invoices", { description: "3 invoices available in Profile → Billing." })}>View invoices</Button>
             </div>
           </div>
 
@@ -136,7 +137,7 @@ function SettingsPage() {
                   <div className="text-xs text-muted-foreground">Expires 09/28</div>
                 </div>
               </div>
-              <Button size="sm" variant="outline">Update</Button>
+              <Button size="sm" variant="outline" onClick={() => toast.message("Update card", { description: "Card update flow will open here." })}>Update</Button>
             </div>
           </div>
         </TabsContent>

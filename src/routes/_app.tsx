@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Bot,
@@ -21,8 +21,10 @@ import {
   Handshake,
   Globe2,
   Plug,
+  UserCircle2,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { BrandMark, LocaleToggle, ThemeToggle } from "@/components/brand";
 import { RoleSwitcher } from "@/components/role-switcher";
 import { Button } from "@/components/ui/button";
@@ -30,8 +32,6 @@ import { Input } from "@/components/ui/input";
 import { useI18n } from "@/lib/i18n";
 import { useRole } from "@/lib/role";
 import { cn } from "@/lib/utils";
-
-import { redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app")({
@@ -48,8 +48,49 @@ type NavItem = { to: string; icon: React.ComponentType<{ className?: string }>; 
 function AppLayout() {
   const { t } = useI18n();
   const { role } = useRole();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  async function handleSignOut() {
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error(e);
+    }
+    toast.success("Signed out");
+    navigate({ to: "/login" });
+  }
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const q = search.trim().toLowerCase();
+    if (!q) return;
+    const map: Record<string, string> = {
+      dashboard: "/dashboard", ai: "/nova-ai", copilot: "/nova-ai", nova: "/nova-ai",
+      market: "/market", marketplace: "/market",
+      supplier: "/suppliers", suppliers: "/suppliers",
+      buyer: "/buyers", buyers: "/buyers",
+      rfq: "/rfq", quote: "/quotations", quotations: "/quotations",
+      trade: "/trade-tools", order: "/orders", orders: "/orders",
+      invoice: "/invoices", invoices: "/invoices",
+      shipment: "/export", shipments: "/export", export: "/export",
+      analytics: "/analytics", weather: "/weather",
+      report: "/reports", reports: "/reports",
+      integration: "/integrations", integrations: "/integrations",
+      setting: "/settings", settings: "/settings",
+      profile: "/profile", account: "/profile",
+    };
+    const match = Object.entries(map).find(([k]) => q.includes(k));
+    if (match) {
+      navigate({ to: match[1] });
+      setSearch("");
+    } else {
+      toast.message(`No results for "${search}"`);
+    }
+  }
+
 
   const overview: NavItem[] = [
     { to: "/dashboard", icon: LayoutDashboard, label: t("nav.dashboard") },
@@ -76,6 +117,7 @@ function AppLayout() {
     { to: "/reports", icon: FileBarChart, label: t("nav.reports") },
   ];
   const account: NavItem[] = [
+    { to: "/profile", icon: UserCircle2, label: t("nav.profile") },
     { to: "/integrations", icon: Plug, label: "Integrations" },
     { to: "/settings", icon: SettingsIcon, label: t("nav.settings") },
   ];
@@ -141,11 +183,9 @@ function AppLayout() {
               <div className="text-sm font-semibold truncate">Karim Hassan</div>
               <div className="text-xs text-muted-foreground truncate capitalize">{role} · Nile Exports Co.</div>
             </div>
-            <Link to="/">
-              <Button variant="ghost" size="icon" aria-label="Sign out">
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </Link>
+            <Button variant="ghost" size="icon" aria-label="Sign out" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </aside>
@@ -160,15 +200,26 @@ function AppLayout() {
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)}>
               <Menu className="h-5 w-5" />
             </Button>
-            <div className="relative flex-1 max-w-md">
+            <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search markets, shipments, insights…" className="ps-9 bg-card/60" />
-            </div>
+              <Input
+                placeholder="Search markets, shipments, insights…"
+                className="ps-9 bg-card/60"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </form>
             <div className="ms-auto flex items-center gap-1">
               <div className="hidden md:block"><RoleSwitcher /></div>
               <LocaleToggle />
               <ThemeToggle />
-              <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Notifications"
+                className="relative"
+                onClick={() => toast.message("No new notifications", { description: "You're all caught up." })}
+              >
                 <Bell className="h-4 w-4" />
                 <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
               </Button>

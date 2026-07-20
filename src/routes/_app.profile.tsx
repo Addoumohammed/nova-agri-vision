@@ -17,6 +17,7 @@ import {
   Sun,
   Check,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,7 +71,11 @@ function ProfilePage() {
               </span>
             </div>
           </div>
-          <Button variant="outline" className="gap-2 shrink-0 col-span-2 sm:col-auto">
+          <Button
+            variant="outline"
+            className="gap-2 shrink-0 col-span-2 sm:col-auto"
+            onClick={() => toast.message("Upload photo", { description: "Choose a new profile picture (demo)." })}
+          >
             <Upload className="h-4 w-4" /> Upload photo
           </Button>
         </div>
@@ -125,7 +130,7 @@ function ProfilePage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <Button className="bg-gradient-primary shadow-glow">{t("profile.save")}</Button>
+              <Button className="bg-gradient-primary shadow-glow" onClick={() => toast.success("Company profile saved")}>{t("profile.save")}</Button>
             </div>
           </div>
 
@@ -157,8 +162,12 @@ function ProfilePage() {
                 <div className="text-sm opacity-80 mt-1">$499 / month · billed annually</div>
               </div>
               <div className="flex gap-2">
-                <Button variant="secondary" className="gap-2">Manage</Button>
-                <Button variant="outline" className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20">
+                <Button variant="secondary" className="gap-2" onClick={() => toast.message("Manage plan", { description: "Billing portal opens here." })}>Manage</Button>
+                <Button
+                  variant="outline"
+                  className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20"
+                  onClick={() => toast.success("Upgrade request sent")}
+                >
                   Upgrade
                 </Button>
               </div>
@@ -175,7 +184,7 @@ function ProfilePage() {
                   <div className="font-semibold">Visa •••• 4242</div>
                   <div className="text-xs text-muted-foreground">Expires 08/28</div>
                 </div>
-                <Button size="sm" variant="outline">Change</Button>
+                <Button size="sm" variant="outline" onClick={() => toast.message("Change card", { description: "Card update flow (demo)." })}>Change</Button>
               </div>
             </div>
 
@@ -217,7 +226,7 @@ function ProfilePage() {
                   <div className="flex items-center gap-3">
                     <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 font-semibold">{inv.s}</span>
                     <span className="font-mono">{inv.a}</span>
-                    <Button size="icon" variant="ghost"><Download className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => toast.success(`Downloading ${inv.n}.pdf`)}><Download className="h-4 w-4" /></Button>
                   </div>
                 </div>
               ))}
@@ -243,7 +252,7 @@ function ProfilePage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <Button className="bg-gradient-primary shadow-glow">Update password</Button>
+              <Button className="bg-gradient-primary shadow-glow" onClick={() => toast.success("Password updated")}>Update password</Button>
             </div>
           </div>
 
@@ -277,7 +286,12 @@ function ProfilePage() {
                   {s.cur ? (
                     <span className="text-xs font-semibold text-emerald-500">Current</span>
                   ) : (
-                    <Button size="sm" variant="ghost" className="text-red-500 gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-red-500 gap-1"
+                      onClick={() => toast.success(`Session on ${s.d} revoked`)}
+                    >
                       <Trash2 className="h-3 w-3" /> Revoke
                     </Button>
                   )}
@@ -366,7 +380,15 @@ function ProfilePage() {
             <p className="text-sm text-muted-foreground mt-1 mb-4">
               Permanently delete your account and all associated data. This action cannot be undone.
             </p>
-            <Button variant="outline" className="border-red-500/50 text-red-500 hover:bg-red-500/10 gap-2">
+            <Button
+              variant="outline"
+              className="border-red-500/50 text-red-500 hover:bg-red-500/10 gap-2"
+              onClick={() => {
+                if (window.confirm("Delete your account permanently? This cannot be undone.")) {
+                  toast.success("Account deletion requested. Our team will confirm by email.");
+                }
+              }}
+            >
               <Trash2 className="h-4 w-4" /> Delete account
             </Button>
           </div>
