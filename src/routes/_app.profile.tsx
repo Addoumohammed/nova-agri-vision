@@ -226,7 +226,7 @@ function ProfilePage() {
                   <div className="flex items-center gap-3">
                     <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 font-semibold">{inv.s}</span>
                     <span className="font-mono">{inv.a}</span>
-                    <Button size="icon" variant="ghost"><Download className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => toast.success(`Downloading ${inv.n}.pdf`)}><Download className="h-4 w-4" /></Button>
                   </div>
                 </div>
               ))}
