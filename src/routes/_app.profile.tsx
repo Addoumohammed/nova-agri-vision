@@ -162,8 +162,12 @@ function ProfilePage() {
                 <div className="text-sm opacity-80 mt-1">$499 / month · billed annually</div>
               </div>
               <div className="flex gap-2">
-                <Button variant="secondary" className="gap-2">Manage</Button>
-                <Button variant="outline" className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20">
+                <Button variant="secondary" className="gap-2" onClick={() => toast.message("Manage plan", { description: "Billing portal opens here." })}>Manage</Button>
+                <Button
+                  variant="outline"
+                  className="bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20"
+                  onClick={() => toast.success("Upgrade request sent")}
+                >
                   Upgrade
                 </Button>
               </div>
