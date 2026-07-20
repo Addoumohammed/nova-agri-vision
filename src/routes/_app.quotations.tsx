@@ -65,7 +65,7 @@ function QuotationsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Quotations & Negotiation"
-        description="Compare quotes on your RFQs, negotiate terms, and accept the best offer."
+        subtitle="Compare quotes on your RFQs, negotiate terms, and accept the best offer."
         actions={
           <Button onClick={() => setOpenRfqDialog({ open: true, rfqId: undefined })}>
             <Plus className="mr-2 h-4 w-4" /> Submit quotation

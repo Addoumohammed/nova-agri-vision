@@ -40,7 +40,7 @@ function IntegrationsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Integrations"
-        description="Connect Nova Pro to the ERP, accounting, logistics, and payment systems you already run."
+        subtitle="Connect Nova Pro to the ERP, accounting, logistics, and payment systems you already run."
       />
 
       <div className="grid gap-4 md:grid-cols-3">

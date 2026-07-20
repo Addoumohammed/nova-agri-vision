@@ -15,15 +15,19 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AppWeatherRouteImport } from './routes/_app.weather'
+import { Route as AppTradeToolsRouteImport } from './routes/_app.trade-tools'
 import { Route as AppSuppliersRouteImport } from './routes/_app.suppliers'
 import { Route as AppShipmentsRouteImport } from './routes/_app.shipments'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppRfqRouteImport } from './routes/_app.rfq'
 import { Route as AppReportsRouteImport } from './routes/_app.reports'
+import { Route as AppQuotationsRouteImport } from './routes/_app.quotations'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppOrdersRouteImport } from './routes/_app.orders'
 import { Route as AppNovaAiRouteImport } from './routes/_app.nova-ai'
 import { Route as AppMarketRouteImport } from './routes/_app.market'
 import { Route as AppInvoicesRouteImport } from './routes/_app.invoices'
+import { Route as AppIntegrationsRouteImport } from './routes/_app.integrations'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppBuyersRouteImport } from './routes/_app.buyers'
@@ -58,6 +62,11 @@ const AppWeatherRoute = AppWeatherRouteImport.update({
   path: '/weather',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTradeToolsRoute = AppTradeToolsRouteImport.update({
+  id: '/trade-tools',
+  path: '/trade-tools',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSuppliersRoute = AppSuppliersRouteImport.update({
   id: '/suppliers',
   path: '/suppliers',
@@ -73,9 +82,19 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRfqRoute = AppRfqRouteImport.update({
+  id: '/rfq',
+  path: '/rfq',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppReportsRoute = AppReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppQuotationsRoute = AppQuotationsRouteImport.update({
+  id: '/quotations',
+  path: '/quotations',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
@@ -101,6 +120,11 @@ const AppMarketRoute = AppMarketRouteImport.update({
 const AppInvoicesRoute = AppInvoicesRouteImport.update({
   id: '/invoices',
   path: '/invoices',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppIntegrationsRoute = AppIntegrationsRouteImport.update({
+  id: '/integrations',
+  path: '/integrations',
   getParentRoute: () => AppRoute,
 } as any)
 const AppExportRoute = AppExportRouteImport.update({
@@ -132,15 +156,19 @@ export interface FileRoutesByFullPath {
   '/buyers': typeof AppBuyersRoute
   '/dashboard': typeof AppDashboardRoute
   '/export': typeof AppExportRoute
+  '/integrations': typeof AppIntegrationsRoute
   '/invoices': typeof AppInvoicesRoute
   '/market': typeof AppMarketRoute
   '/nova-ai': typeof AppNovaAiRoute
   '/orders': typeof AppOrdersRoute
   '/profile': typeof AppProfileRoute
+  '/quotations': typeof AppQuotationsRoute
   '/reports': typeof AppReportsRoute
+  '/rfq': typeof AppRfqRoute
   '/settings': typeof AppSettingsRoute
   '/shipments': typeof AppShipmentsRoute
   '/suppliers': typeof AppSuppliersRoute
+  '/trade-tools': typeof AppTradeToolsRoute
   '/weather': typeof AppWeatherRoute
   '/api/chat': typeof ApiChatRoute
 }
@@ -152,15 +180,19 @@ export interface FileRoutesByTo {
   '/buyers': typeof AppBuyersRoute
   '/dashboard': typeof AppDashboardRoute
   '/export': typeof AppExportRoute
+  '/integrations': typeof AppIntegrationsRoute
   '/invoices': typeof AppInvoicesRoute
   '/market': typeof AppMarketRoute
   '/nova-ai': typeof AppNovaAiRoute
   '/orders': typeof AppOrdersRoute
   '/profile': typeof AppProfileRoute
+  '/quotations': typeof AppQuotationsRoute
   '/reports': typeof AppReportsRoute
+  '/rfq': typeof AppRfqRoute
   '/settings': typeof AppSettingsRoute
   '/shipments': typeof AppShipmentsRoute
   '/suppliers': typeof AppSuppliersRoute
+  '/trade-tools': typeof AppTradeToolsRoute
   '/weather': typeof AppWeatherRoute
   '/api/chat': typeof ApiChatRoute
 }
@@ -174,15 +206,19 @@ export interface FileRoutesById {
   '/_app/buyers': typeof AppBuyersRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/export': typeof AppExportRoute
+  '/_app/integrations': typeof AppIntegrationsRoute
   '/_app/invoices': typeof AppInvoicesRoute
   '/_app/market': typeof AppMarketRoute
   '/_app/nova-ai': typeof AppNovaAiRoute
   '/_app/orders': typeof AppOrdersRoute
   '/_app/profile': typeof AppProfileRoute
+  '/_app/quotations': typeof AppQuotationsRoute
   '/_app/reports': typeof AppReportsRoute
+  '/_app/rfq': typeof AppRfqRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/shipments': typeof AppShipmentsRoute
   '/_app/suppliers': typeof AppSuppliersRoute
+  '/_app/trade-tools': typeof AppTradeToolsRoute
   '/_app/weather': typeof AppWeatherRoute
   '/api/chat': typeof ApiChatRoute
 }
@@ -196,15 +232,19 @@ export interface FileRouteTypes {
     | '/buyers'
     | '/dashboard'
     | '/export'
+    | '/integrations'
     | '/invoices'
     | '/market'
     | '/nova-ai'
     | '/orders'
     | '/profile'
+    | '/quotations'
     | '/reports'
+    | '/rfq'
     | '/settings'
     | '/shipments'
     | '/suppliers'
+    | '/trade-tools'
     | '/weather'
     | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
@@ -216,15 +256,19 @@ export interface FileRouteTypes {
     | '/buyers'
     | '/dashboard'
     | '/export'
+    | '/integrations'
     | '/invoices'
     | '/market'
     | '/nova-ai'
     | '/orders'
     | '/profile'
+    | '/quotations'
     | '/reports'
+    | '/rfq'
     | '/settings'
     | '/shipments'
     | '/suppliers'
+    | '/trade-tools'
     | '/weather'
     | '/api/chat'
   id:
@@ -237,15 +281,19 @@ export interface FileRouteTypes {
     | '/_app/buyers'
     | '/_app/dashboard'
     | '/_app/export'
+    | '/_app/integrations'
     | '/_app/invoices'
     | '/_app/market'
     | '/_app/nova-ai'
     | '/_app/orders'
     | '/_app/profile'
+    | '/_app/quotations'
     | '/_app/reports'
+    | '/_app/rfq'
     | '/_app/settings'
     | '/_app/shipments'
     | '/_app/suppliers'
+    | '/_app/trade-tools'
     | '/_app/weather'
     | '/api/chat'
   fileRoutesById: FileRoutesById
@@ -302,6 +350,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWeatherRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/trade-tools': {
+      id: '/_app/trade-tools'
+      path: '/trade-tools'
+      fullPath: '/trade-tools'
+      preLoaderRoute: typeof AppTradeToolsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/suppliers': {
       id: '/_app/suppliers'
       path: '/suppliers'
@@ -323,11 +378,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/rfq': {
+      id: '/_app/rfq'
+      path: '/rfq'
+      fullPath: '/rfq'
+      preLoaderRoute: typeof AppRfqRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/reports': {
       id: '/_app/reports'
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/quotations': {
+      id: '/_app/quotations'
+      path: '/quotations'
+      fullPath: '/quotations'
+      preLoaderRoute: typeof AppQuotationsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/profile': {
@@ -363,6 +432,13 @@ declare module '@tanstack/react-router' {
       path: '/invoices'
       fullPath: '/invoices'
       preLoaderRoute: typeof AppInvoicesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/integrations': {
+      id: '/_app/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof AppIntegrationsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/export': {
@@ -401,15 +477,19 @@ interface AppRouteChildren {
   AppBuyersRoute: typeof AppBuyersRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppExportRoute: typeof AppExportRoute
+  AppIntegrationsRoute: typeof AppIntegrationsRoute
   AppInvoicesRoute: typeof AppInvoicesRoute
   AppMarketRoute: typeof AppMarketRoute
   AppNovaAiRoute: typeof AppNovaAiRoute
   AppOrdersRoute: typeof AppOrdersRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppQuotationsRoute: typeof AppQuotationsRoute
   AppReportsRoute: typeof AppReportsRoute
+  AppRfqRoute: typeof AppRfqRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppShipmentsRoute: typeof AppShipmentsRoute
   AppSuppliersRoute: typeof AppSuppliersRoute
+  AppTradeToolsRoute: typeof AppTradeToolsRoute
   AppWeatherRoute: typeof AppWeatherRoute
 }
 
@@ -418,15 +498,19 @@ const AppRouteChildren: AppRouteChildren = {
   AppBuyersRoute: AppBuyersRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppExportRoute: AppExportRoute,
+  AppIntegrationsRoute: AppIntegrationsRoute,
   AppInvoicesRoute: AppInvoicesRoute,
   AppMarketRoute: AppMarketRoute,
   AppNovaAiRoute: AppNovaAiRoute,
   AppOrdersRoute: AppOrdersRoute,
   AppProfileRoute: AppProfileRoute,
+  AppQuotationsRoute: AppQuotationsRoute,
   AppReportsRoute: AppReportsRoute,
+  AppRfqRoute: AppRfqRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppShipmentsRoute: AppShipmentsRoute,
   AppSuppliersRoute: AppSuppliersRoute,
+  AppTradeToolsRoute: AppTradeToolsRoute,
   AppWeatherRoute: AppWeatherRoute,
 }
 

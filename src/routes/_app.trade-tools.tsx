@@ -24,7 +24,7 @@ function TradeToolsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Trade Tools"
-        description="Live FX rates, shipping estimator, customs requirements, and country regulations."
+        subtitle="Live FX rates, shipping estimator, customs requirements, and country regulations."
       />
       <Tabs defaultValue="currency">
         <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
