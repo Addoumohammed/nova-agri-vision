@@ -45,7 +45,7 @@ function LoginPage() {
     const target = email || window.prompt("Enter your account email to reset password:") || "";
     if (!target) return;
     const { error } = await supabase.auth.resetPasswordForEmail(target, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
     });
     if (error) toast.error(error.message);
     else toast.success("Password reset email sent");
