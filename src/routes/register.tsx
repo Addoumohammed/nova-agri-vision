@@ -35,7 +35,7 @@ function RegisterPage() {
         email: form.email,
         password: form.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
           data: { full_name: form.name, company: form.company },
         },
       });
