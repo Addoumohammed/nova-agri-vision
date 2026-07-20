@@ -1,347 +1,639 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport, type UIMessage } from "ai";
+import { useEffect, useMemo, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
-  Sparkles,
-  Send,
   Bot,
-  User,
+  Send,
   Mic,
+  MicOff,
+  Volume2,
   Paperclip,
-  Download,
-  Copy,
   Plus,
-  MessageSquare,
-  Search,
   Trash2,
-  Check,
-  Zap,
-  Globe2,
-  TrendingUp,
+  Search,
+  Sparkles,
   Leaf,
+  TrendingUp,
+  Lightbulb,
+  Languages,
+  Loader2,
+  StopCircle,
+  MessageSquare,
+  FileText,
+  ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import {
+  listConversations,
+  createConversation,
+  deleteConversation,
+  getConversation,
+} from "@/lib/ai.functions";
 
-export const Route = createFileRoute("/_app/nova-ai")({
-  component: NovaAiPage,
-});
+export const Route = createFileRoute("/_app/nova-ai")({ component: NovaAiPage });
 
-type Msg = { role: "user" | "ai"; text: string; time: string };
-type Conversation = { id: string; title: string; preview: string; time: string; messages: Msg[] };
+type ConvRow = {
+  id: string;
+  title: string;
+  model: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
-const now = () =>
-  new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+type ActionPreset = {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  prompt: string;
+  systemHint?: string;
+};
 
-const seedConversations: Conversation[] = [
+const ACTIONS: ActionPreset[] = [
   {
-    id: "c1",
-    title: "EU orange export strategy",
-    preview: "Rotterdam and Hamburg show the strongest margins…",
-    time: "2m",
-    messages: [
-      {
-        role: "ai",
-        text:
-          "Hi Karim — I've reviewed today's markets. Egyptian oranges are trending +6.2% into the EU. Ask me anything about prices, buyers, weather or compliance.",
-        time: "09:41",
-      },
-      {
-        role: "user",
-        text: "Which EU ports give the best margin for oranges this week?",
-        time: "09:42",
-      },
-      {
-        role: "ai",
-        text:
-          "Based on live trade signals, prioritize **Rotterdam** and **Hamburg**. Estimated margin uplift: **+8.4%** vs. Genoa. Freight rates dropped 3.1% on the Alexandria–Rotterdam corridor.",
-        time: "09:42",
-      },
-    ],
+    id: "crop-disease",
+    label: "Crop disease scan",
+    icon: Leaf,
+    color: "from-emerald-500 to-teal-500",
+    prompt:
+      "Analyze the attached crop image for signs of disease, pests, or nutrient deficiency. Return: (1) most likely condition with confidence, (2) visible symptoms, (3) recommended treatment protocol, (4) prevention measures.",
+    systemHint: "The user needs a plant-pathology diagnosis. If no image is attached, ask them to attach one.",
   },
   {
-    id: "c2",
-    title: "Wheat price forecast · 30 days",
-    preview: "CBOT wheat likely to trade between $6.10–6.60…",
-    time: "1h",
-    messages: [],
+    id: "market-prediction",
+    label: "Market prediction",
+    icon: TrendingUp,
+    color: "from-amber-500 to-orange-500",
+    prompt:
+      "Give a 90-day price outlook for a commodity of my choice. Cover: current trend, key demand drivers, supply risks, seasonal factors, and a low/base/high scenario. If I haven't specified the commodity, ask which one.",
   },
   {
-    id: "c3",
-    title: "Compliance checklist · Gulf",
-    preview: "SFDA + GCC-SASO documents required…",
-    time: "Yesterday",
-    messages: [],
+    id: "business-reco",
+    label: "Business recommendations",
+    icon: Lightbulb,
+    color: "from-violet-500 to-fuchsia-500",
+    prompt:
+      "Based on Nova Pro's typical agricultural trade flows, suggest 3 concrete growth actions I can take this quarter. For each: opportunity, effort, expected impact, and first step.",
   },
   {
-    id: "c4",
-    title: "Nile Delta weather risk",
-    preview: "High-wind advisory Thursday–Friday…",
-    time: "2d",
-    messages: [],
+    id: "translate",
+    label: "Translate document",
+    icon: Languages,
+    color: "from-sky-500 to-cyan-500",
+    prompt: "Translate the text I paste (or the attached document) into fluent English and Arabic side-by-side, preserving trade terminology.",
   },
 ];
 
+const SUGGESTED = [
+  "Compare olive oil export prices between Morocco and Spain",
+  "Draft a proforma invoice for 120 MT of Grade A oranges to Rotterdam",
+  "What documents does Saudi Arabia require to import basmati rice?",
+  "Summarize weather risk this week for Alexandria → Hamburg sea route",
+];
+
 function NovaAiPage() {
-  const { t } = useI18n();
-  const [conversations, setConversations] = useState<Conversation[]>(seedConversations);
-  const [activeId, setActiveId] = useState<string>("c1");
-  const [messages, setMessages] = useState<Msg[]>(seedConversations[0].messages);
-  const [input, setInput] = useState("");
+  const { dir } = useI18n();
+  const [conversations, setConversations] = useState<ConvRow[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [loadingConvs, setLoadingConvs] = useState(true);
+  const [initialMessages, setInitialMessages] = useState<UIMessage[]>([]);
+  const [conversationKey, setConversationKey] = useState(0);
+  const [search, setSearch] = useState("");
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [voiceOn, setVoiceOn] = useState(false);
   const [listening, setListening] = useState(false);
-  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [systemHint, setSystemHint] = useState<string | undefined>();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<{ stop: () => void; start: () => void } | null>(null);
+
+  const refreshConversations = async () => {
+    try {
+      const rows = await listConversations();
+      setConversations(rows);
+    } catch (err) {
+      console.error("listConversations", err);
+    } finally {
+      setLoadingConvs(false);
+    }
+  };
 
   useEffect(() => {
-    const c = conversations.find((x) => x.id === activeId);
-    if (c) setMessages(c.messages);
+    void refreshConversations();
+  }, []);
+
+  // Load messages when active conversation changes.
+  useEffect(() => {
+    if (!activeId) {
+      setInitialMessages([]);
+      setConversationKey((k) => k + 1);
+      return;
+    }
+    void (async () => {
+      try {
+        const res = await getConversation({ data: { id: activeId } });
+        const msgs: UIMessage[] =
+          res?.messages.map((m) => ({
+            id: m.id,
+            role: m.role === "assistant" ? "assistant" : m.role === "system" ? "system" : "user",
+            parts: [{ type: "text", text: m.content }],
+          })) ?? [];
+        setInitialMessages(msgs);
+        setConversationKey((k) => k + 1);
+      } catch (err) {
+        console.error("getConversation", err);
+        toast.error("Could not load conversation");
+      }
+    })();
   }, [activeId]);
 
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/chat",
+        prepareSendMessagesRequest: async ({ messages, body }) => {
+          const { data } = await supabase.auth.getSession();
+          const token = data.session?.access_token;
+          return {
+            body: {
+              messages,
+              conversationId: activeId,
+              systemHint,
+              ...(body ?? {}),
+            },
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          };
+        },
+      }),
+    // biome/eslint: transport is intentionally rebuilt when active conv or system hint changes
+    [activeId, systemHint],
+  );
+
+  const { messages, sendMessage, status, stop, error, setMessages } = useChat({
+    id: `nova-${conversationKey}`,
+    messages: initialMessages,
+    transport,
+    onError: (e) => toast.error(e.message ?? "AI request failed"),
+    onFinish: async () => {
+      await refreshConversations();
+      if (voiceOn) speakLastAssistantMessage();
+    },
+  });
+
+  // Auto-scroll on new content.
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+  }, [messages, status]);
 
-  const send = (text: string) => {
-    if (!text.trim()) return;
-    const userMsg: Msg = { role: "user", text, time: now() };
-    setMessages((m) => [...m, userMsg]);
-    setInput("");
-    setTimeout(() => {
-      const reply: Msg = {
-        role: "ai",
-        text:
-          "I'm analyzing live trade signals, weather models and buyer demand… **Recommendation:** ship to Rotterdam this week — freight is down 3.1%, buyer demand is up 12%, and forecast margin uplift is **+8.4%**.",
-        time: now(),
-      };
-      setMessages((m) => [...m, reply]);
-    }, 700);
-  };
-
-  const newChat = () => {
-    const id = "c" + Date.now();
-    const c: Conversation = {
-      id,
-      title: "New conversation",
-      preview: "Start chatting with Nova AI…",
-      time: "now",
-      messages: [
-        {
-          role: "ai",
-          text: "Fresh session — what would you like to explore today?",
-          time: now(),
-        },
-      ],
+  // Speech recognition (Web Speech API).
+  const startListening = () => {
+    type SRCtor = new () => {
+      lang: string;
+      interimResults: boolean;
+      maxAlternatives: number;
+      onresult: (ev: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void;
+      onend: () => void;
+      onerror: () => void;
+      start: () => void;
+      stop: () => void;
     };
-    setConversations((cs) => [c, ...cs]);
-    setActiveId(id);
+    const w = window as unknown as { SpeechRecognition?: SRCtor; webkitSpeechRecognition?: SRCtor };
+    const SR = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    if (!SR) {
+      toast.error("Voice input isn't supported in this browser");
+      return;
+    }
+    const rec = new SR();
+    rec.lang = dir === "rtl" ? "ar-SA" : "en-US";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onresult = (ev) => {
+      const text = ev.results[0]?.[0]?.transcript?.trim();
+      if (text) setInput((s) => (s ? `${s} ${text}` : text));
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    recognitionRef.current = rec;
+    setListening(true);
+    rec.start();
+  };
+  const stopListening = () => {
+    recognitionRef.current?.stop();
+    setListening(false);
   };
 
-  const deleteConv = (id: string) => {
-    setConversations((cs) => cs.filter((c) => c.id !== id));
-    if (id === activeId && conversations[0]) setActiveId(conversations[0].id);
+  const speakLastAssistantMessage = () => {
+    const last = [...messages].reverse().find((m) => m.role === "assistant");
+    if (!last) return;
+    const text = last.parts.map((p) => (p.type === "text" ? p.text : "")).join(" ").trim();
+    if (!text) return;
+    speak(text);
+  };
+  const speak = (text: string) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) {
+      toast.error("Voice output isn't supported in this browser");
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.slice(0, 800));
+    u.lang = dir === "rtl" ? "ar-SA" : "en-US";
+    u.rate = 1.05;
+    window.speechSynthesis.speak(u);
   };
 
-  const copy = (text: string, i: number) => {
-    navigator.clipboard?.writeText(text);
-    setCopiedIdx(i);
-    setTimeout(() => setCopiedIdx(null), 1200);
+  const [input, setInput] = useState("");
+  const busy = status === "submitted" || status === "streaming";
+
+  const handleSend = async (overrideText?: string, hint?: string) => {
+    const text = (overrideText ?? input).trim();
+    if (!text && attachments.length === 0) return;
+    setInput("");
+    setSystemHint(hint);
+    try {
+      let fileList: FileList | undefined;
+      if (attachments.length > 0) {
+        const dt = new DataTransfer();
+        attachments.forEach((f) => dt.items.add(f));
+        fileList = dt.files;
+      }
+      await sendMessage({
+        text: text || "Please analyze the attached file.",
+        files: fileList,
+      });
+      setAttachments([]);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSystemHint(undefined);
+    }
   };
 
-  const exportConv = () => {
-    const body = messages.map((m) => `[${m.time}] ${m.role.toUpperCase()}: ${m.text}`).join("\n\n");
-    const blob = new Blob([body], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "nova-ai-conversation.txt";
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleNew = async () => {
+    try {
+      const conv = await createConversation({ data: {} });
+      await refreshConversations();
+      setMessages([]);
+      setActiveId(conv.id);
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not create new chat");
+    }
   };
 
-  const suggestions = [
-    t("novaai.suggestion1"),
-    t("novaai.suggestion2"),
-    t("novaai.suggestion3"),
-    t("novaai.suggestion4"),
-  ];
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteConversation({ data: { id } });
+      if (activeId === id) setActiveId(null);
+      await refreshConversations();
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not delete conversation");
+    }
+  };
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    const filtered = files.filter((f) => f.size <= 15 * 1024 * 1024);
+    if (filtered.length !== files.length) toast.warning("Some files exceeded 15 MB and were skipped");
+    setAttachments((prev) => [...prev, ...filtered].slice(0, 4));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const filteredConvs = conversations.filter((c) =>
+    !search.trim() ? true : c.title.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] h-[calc(100vh-8rem)]">
-      {/* Conversation history */}
-      <aside className="hidden lg:flex flex-col rounded-2xl border border-border bg-card shadow-elegant overflow-hidden">
-        <div className="p-4 border-b border-border">
-          <Button onClick={newChat} className="w-full bg-gradient-primary shadow-glow gap-2">
+    <div className="grid h-[calc(100vh-4rem)] grid-cols-1 gap-4 lg:grid-cols-[280px_1fr]">
+      {/* Sidebar */}
+      <aside className="hidden flex-col rounded-2xl border bg-card lg:flex">
+        <div className="border-b p-3">
+          <Button onClick={handleNew} className="w-full gap-2">
             <Plus className="h-4 w-4" /> New chat
           </Button>
           <div className="relative mt-3">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search conversations…" className="ps-9" />
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search chats"
+              className="pl-8"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-2">
-          {conversations.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => setActiveId(c.id)}
-              className={cn(
-                "group w-full text-start rounded-xl p-3 transition mb-1",
-                activeId === c.id ? "bg-accent" : "hover:bg-accent/50",
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-primary shrink-0" />
-                <div className="text-sm font-semibold truncate flex-1">{c.title}</div>
-                <span className="text-[10px] text-muted-foreground shrink-0">{c.time}</span>
+        <ScrollArea className="flex-1">
+          <div className="space-y-1 p-2">
+            {loadingConvs ? (
+              <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading…
               </div>
-              <div className="text-xs text-muted-foreground mt-1 line-clamp-1 ps-6">
-                {c.preview}
+            ) : filteredConvs.length === 0 ? (
+              <div className="px-3 py-8 text-center text-sm text-muted-foreground">
+                <MessageSquare className="mx-auto mb-2 h-6 w-6 opacity-40" />
+                No conversations yet.
+                <br />
+                Start with a prompt below.
               </div>
-              <div className="ps-6 mt-1 opacity-0 group-hover:opacity-100 transition">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteConv(c.id);
-                  }}
-                  className="text-[11px] text-red-500 inline-flex items-center gap-1"
+            ) : (
+              filteredConvs.map((c) => (
+                <div
+                  key={c.id}
+                  className={cn(
+                    "group flex items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm transition hover:bg-muted",
+                    activeId === c.id && "border-primary/20 bg-primary/10",
+                  )}
                 >
-                  <Trash2 className="h-3 w-3" /> delete
-                </button>
-              </div>
-            </button>
-          ))}
-        </div>
+                  <button
+                    type="button"
+                    className="flex-1 truncate text-start"
+                    onClick={() => setActiveId(c.id)}
+                    title={c.title}
+                  >
+                    {c.title}
+                  </button>
+                  <button
+                    type="button"
+                    className="text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+                    onClick={() => handleDelete(c.id)}
+                    aria-label="Delete conversation"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </ScrollArea>
       </aside>
 
       {/* Chat */}
-      <div className="flex flex-col rounded-2xl border border-border bg-card shadow-elegant overflow-hidden min-h-0">
-        <div className="flex items-center gap-3 p-4 border-b border-border">
-          <div className="h-10 w-10 rounded-2xl bg-gradient-primary grid place-items-center shadow-glow">
-            <Sparkles className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="font-display font-bold truncate">{t("novaai.title")}</div>
-            <div className="text-xs text-muted-foreground truncate">{t("novaai.subtitle")}</div>
-          </div>
-          <Button variant="ghost" size="sm" onClick={exportConv} className="gap-2">
-            <Download className="h-4 w-4" /> <span className="hidden sm:inline">Export</span>
-          </Button>
-          <Button variant="ghost" size="sm" onClick={newChat} className="gap-2 lg:hidden">
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-          {messages.map((m, i) => (
-            <div key={i} className={cn("flex gap-3", m.role === "user" && "flex-row-reverse")}>
-              <div
-                className={cn(
-                  "h-8 w-8 rounded-full grid place-items-center shrink-0",
-                  m.role === "user" ? "bg-gradient-gold" : "bg-gradient-primary",
-                )}
-              >
-                {m.role === "user" ? (
-                  <User className="h-4 w-4 text-gold-foreground" />
-                ) : (
-                  <Bot className="h-4 w-4 text-primary-foreground" />
-                )}
+      <section className="flex min-h-0 flex-col rounded-2xl border bg-card">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b p-4">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-md">
+              <Bot className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 font-semibold">
+                Nova AI Copilot
+                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  ● online
+                </span>
               </div>
-              <div className={cn("max-w-[80%] group", m.role === "user" ? "items-end" : "")}>
-                <div
-                  className={cn(
-                    "rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap",
-                    m.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-accent text-accent-foreground",
-                  )}
-                  dangerouslySetInnerHTML={{
-                    __html: m.text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>"),
-                  }}
-                />
-                <div className="mt-1 px-1 flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <span>{m.time}</span>
-                  {m.role === "ai" && (
-                    <button
-                      onClick={() => copy(m.text, i)}
-                      className="inline-flex items-center gap-1 hover:text-foreground transition"
-                    >
-                      {copiedIdx === i ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                      {copiedIdx === i ? "Copied" : "Copy"}
-                    </button>
-                  )}
-                </div>
+              <div className="text-xs text-muted-foreground">
+                Enterprise assistant for agriculture and international trade
               </div>
             </div>
-          ))}
+          </div>
+          <Button
+            variant={voiceOn ? "default" : "outline"}
+            size="sm"
+            onClick={() => setVoiceOn((v) => !v)}
+            className="gap-2"
+          >
+            <Volume2 className="h-4 w-4" /> {voiceOn ? "Voice on" : "Voice off"}
+          </Button>
         </div>
 
-        <div className="border-t border-border p-3 sm:p-4 space-y-3">
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map((s, i) => {
-              const Icon = [Zap, TrendingUp, Globe2, Leaf][i] || Sparkles;
-              return (
-                <button
-                  key={s}
-                  onClick={() => send(s)}
-                  className="text-xs px-3 py-1.5 rounded-full border border-border bg-background hover:bg-accent transition inline-flex items-center gap-1.5"
-                >
-                  <Icon className="h-3 w-3 text-primary" />
-                  {s}
-                </button>
-              );
-            })}
-          </div>
+        {/* Messages */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 sm:p-6">
+          {messages.length === 0 ? (
+            <EmptyState onAction={(a) => handleSend(a.prompt, a.systemHint)} onSuggest={(s) => handleSend(s)} />
+          ) : (
+            <div className="mx-auto max-w-3xl space-y-6">
+              {messages.map((m) => (
+                <MessageBubble key={m.id} m={m} onSpeak={speak} />
+              ))}
+              {status === "submitted" && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Nova is thinking…
+                </div>
+              )}
+              {error && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                  {error.message}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Composer */}
+        <div className="border-t bg-background/50 p-3 backdrop-blur">
+          {attachments.length > 0 && (
+            <div className="mx-auto mb-2 flex max-w-3xl flex-wrap gap-2">
+              {attachments.map((f, i) => (
+                <div key={i} className="flex items-center gap-2 rounded-full border bg-muted px-3 py-1 text-xs">
+                  {f.type.startsWith("image/") ? (
+                    <ImageIcon className="h-3.5 w-3.5" />
+                  ) : (
+                    <FileText className="h-3.5 w-3.5" />
+                  )}
+                  <span className="max-w-[180px] truncate">{f.name}</span>
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <form
-            className="flex items-center gap-2"
+            className="mx-auto flex max-w-3xl items-end gap-2"
             onSubmit={(e) => {
               e.preventDefault();
-              send(input);
+              void handleSend();
             }}
           >
             <input
-              ref={fileRef}
               type="file"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) send(`📎 Attached: ${f.name}`);
-              }}
+              multiple
+              hidden
+              ref={fileInputRef}
+              accept="image/*,application/pdf,text/*"
+              onChange={onFileChange}
             />
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               size="icon"
-              onClick={() => fileRef.current?.click()}
+              onClick={() => fileInputRef.current?.click()}
               aria-label="Attach file"
+              disabled={busy}
             >
               <Paperclip className="h-4 w-4" />
             </Button>
             <Button
               type="button"
-              variant="ghost"
+              variant={listening ? "default" : "outline"}
               size="icon"
-              onClick={() => {
-                setListening((l) => !l);
-                setTimeout(() => setListening(false), 1600);
-              }}
+              onClick={listening ? stopListening : startListening}
               aria-label="Voice input"
-              className={cn(listening && "text-primary")}
+              disabled={busy}
             >
-              <Mic className={cn("h-4 w-4", listening && "animate-pulse")} />
+              {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </Button>
-            <Input
+            <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={t("novaai.placeholder")}
-              className="flex-1"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void handleSend();
+                }
+              }}
+              placeholder="Ask about crops, markets, shipments, invoices…"
+              rows={1}
+              className="min-h-[44px] max-h-40 flex-1 resize-none rounded-xl border bg-background px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/30"
             />
-            <Button type="submit" className="bg-gradient-primary shadow-glow gap-2">
-              <Send className="h-4 w-4" />
-              <span className="hidden sm:inline">{t("novaai.send")}</span>
-            </Button>
+            {busy ? (
+              <Button type="button" variant="destructive" size="icon" onClick={() => stop()} aria-label="Stop">
+                <StopCircle className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button type="submit" size="icon" disabled={!input.trim() && attachments.length === 0} aria-label="Send">
+                <Send className="h-4 w-4" />
+              </Button>
+            )}
           </form>
+          <div className="mx-auto mt-2 max-w-3xl text-center text-[11px] text-muted-foreground">
+            Nova AI can make mistakes. Verify critical decisions with source data.
+          </div>
         </div>
+      </section>
+    </div>
+  );
+}
+
+function EmptyState({
+  onAction,
+  onSuggest,
+}: {
+  onAction: (a: ActionPreset) => void;
+  onSuggest: (s: string) => void;
+}) {
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 py-8 text-center">
+      <div>
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg">
+          <Sparkles className="h-8 w-8" />
+        </div>
+        <h1 className="mt-4 text-2xl font-bold">How can I help you today?</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Analyze crops, forecast markets, review documents, translate — all from one place.
+        </p>
+      </div>
+
+      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+        {ACTIONS.map((a) => (
+          <button
+            key={a.id}
+            type="button"
+            onClick={() => onAction(a)}
+            className="group flex items-start gap-3 rounded-xl border bg-card p-4 text-start transition hover:border-primary/40 hover:shadow-md"
+          >
+            <div className={cn("grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br text-white", a.color)}>
+              <a.icon className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <div className="font-medium">{a.label}</div>
+              <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{a.prompt}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <div className="w-full space-y-2">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Try asking</div>
+        <div className="flex flex-wrap justify-center gap-2">
+          {SUGGESTED.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => onSuggest(s)}
+              className="rounded-full border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MessageBubble({ m, onSpeak }: { m: UIMessage; onSpeak: (t: string) => void }) {
+  const isUser = m.role === "user";
+  const text = m.parts
+    .map((p) => (p.type === "text" ? p.text : ""))
+    .join("\n")
+    .trim();
+  const files = m.parts.filter((p) => p.type === "file") as Array<{
+    type: "file";
+    mediaType?: string;
+    url?: string;
+    filename?: string;
+  }>;
+  return (
+    <div className={cn("flex gap-3", isUser && "flex-row-reverse")}>
+      <div
+        className={cn(
+          "grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold",
+          isUser
+            ? "bg-primary text-primary-foreground"
+            : "bg-gradient-to-br from-emerald-500 to-cyan-500 text-white",
+        )}
+      >
+        {isUser ? "You" : <Bot className="h-4 w-4" />}
+      </div>
+      <div
+        className={cn(
+          "max-w-[85%] rounded-2xl px-4 py-3 text-sm shadow-sm",
+          isUser ? "bg-primary text-primary-foreground" : "border bg-background",
+        )}
+      >
+        {files.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {files.map((f, i) =>
+              f.mediaType?.startsWith("image/") && f.url ? (
+                <img key={i} src={f.url} alt={f.filename ?? "image"} className="max-h-40 rounded-md" />
+              ) : (
+                <div key={i} className="flex items-center gap-1.5 rounded-md border bg-muted/40 px-2 py-1 text-xs">
+                  <FileText className="h-3.5 w-3.5" /> {f.filename ?? f.mediaType ?? "file"}
+                </div>
+              ),
+            )}
+          </div>
+        )}
+        {isUser ? (
+          <div className="whitespace-pre-wrap">{text}</div>
+        ) : (
+          <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1.5 prose-pre:my-2">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+            {text && (
+              <button
+                type="button"
+                className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => onSpeak(text)}
+              >
+                <Volume2 className="h-3 w-3" /> Read aloud
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
