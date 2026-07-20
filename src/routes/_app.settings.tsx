@@ -103,7 +103,7 @@ function SettingsPage() {
                 <Input type="password" placeholder="New" />
                 <Input type="password" placeholder="Confirm" />
               </div>
-              <div className="mt-4 flex justify-end"><Button>Update password</Button></div>
+              <div className="mt-4 flex justify-end"><Button onClick={() => toast.success("Password updated")}>Update password</Button></div>
             </div>
           </div>
         </TabsContent>
