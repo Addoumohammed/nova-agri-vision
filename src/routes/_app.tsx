@@ -17,6 +17,10 @@ import {
   Search,
   Menu,
   X,
+  FileQuestion,
+  Handshake,
+  Globe2,
+  Plug,
 } from "lucide-react";
 import { useState } from "react";
 import { BrandMark, LocaleToggle, ThemeToggle } from "@/components/brand";
@@ -48,6 +52,11 @@ function AppLayout() {
     { to: "/suppliers", icon: Users, label: t("nav.suppliers") },
     { to: "/buyers", icon: Building2, label: t("nav.buyers") },
   ];
+  const trade: NavItem[] = [
+    { to: "/rfq", icon: FileQuestion, label: "RFQ" },
+    { to: "/quotations", icon: Handshake, label: "Quotations" },
+    { to: "/trade-tools", icon: Globe2, label: "Trade Tools" },
+  ];
   const operations: NavItem[] = [
     { to: "/orders", icon: ClipboardList, label: t("nav.orders") },
     { to: "/invoices", icon: FileText, label: t("nav.invoices") },
@@ -59,6 +68,7 @@ function AppLayout() {
     { to: "/reports", icon: FileBarChart, label: t("nav.reports") },
   ];
   const account: NavItem[] = [
+    { to: "/integrations", icon: Plug, label: "Integrations" },
     { to: "/settings", icon: SettingsIcon, label: t("nav.settings") },
   ];
 
@@ -108,6 +118,7 @@ function AppLayout() {
         <nav className="flex-1 p-3 overflow-y-auto">
           <Section title={t("nav.section.overview")} items={overview} />
           <Section title={t("nav.section.network")} items={network} />
+          <Section title="Trade" items={trade} />
           <Section title={t("nav.section.operations")} items={operations} />
           <Section title={t("nav.section.insights")} items={insights} />
           <Section title={t("nav.section.account")} items={account} />
