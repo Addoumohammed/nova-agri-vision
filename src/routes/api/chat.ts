@@ -47,7 +47,10 @@ async function persistMessages(opts: {
     .select("title")
     .eq("id", opts.conversationId)
     .maybeSingle();
-  const patch: Record<string, unknown> = { updated_at: new Date().toISOString(), model: opts.model };
+  const patch: { updated_at: string; model: string; title?: string } = {
+    updated_at: new Date().toISOString(),
+    model: opts.model,
+  };
   if (conv?.title === "New chat" && userText) {
     patch.title = userText.slice(0, 80);
   }

@@ -13,6 +13,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AppWeatherRouteImport } from './routes/_app.weather'
 import { Route as AppSuppliersRouteImport } from './routes/_app.suppliers'
 import { Route as AppShipmentsRouteImport } from './routes/_app.shipments'
@@ -45,6 +46,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppWeatherRoute = AppWeatherRouteImport.update({
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/shipments': typeof AppShipmentsRoute
   '/suppliers': typeof AppSuppliersRoute
   '/weather': typeof AppWeatherRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/shipments': typeof AppShipmentsRoute
   '/suppliers': typeof AppSuppliersRoute
   '/weather': typeof AppWeatherRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/_app/shipments': typeof AppShipmentsRoute
   '/_app/suppliers': typeof AppSuppliersRoute
   '/_app/weather': typeof AppWeatherRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
     | '/shipments'
     | '/suppliers'
     | '/weather'
+    | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/shipments'
     | '/suppliers'
     | '/weather'
+    | '/api/chat'
   id:
     | '__root__'
     | '/'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/_app/shipments'
     | '/_app/suppliers'
     | '/_app/weather'
+    | '/api/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -243,6 +255,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  ApiChatRoute: typeof ApiChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -273,6 +286,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/weather': {
@@ -417,6 +437,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  ApiChatRoute: ApiChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
