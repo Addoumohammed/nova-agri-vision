@@ -122,8 +122,8 @@ function SettingsPage() {
               </div>
             </div>
             <div className="mt-4 flex gap-2">
-              <Button variant="secondary" size="sm">Manage plan</Button>
-              <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-white/10">View invoices</Button>
+              <Button variant="secondary" size="sm" onClick={() => toast.message("Plan management", { description: "Opening billing portal…" })}>Manage plan</Button>
+              <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-white/10" onClick={() => toast.message("Invoices", { description: "3 invoices available in Profile → Billing." })}>View invoices</Button>
             </div>
           </div>
 
