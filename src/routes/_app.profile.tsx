@@ -184,7 +184,7 @@ function ProfilePage() {
                   <div className="font-semibold">Visa •••• 4242</div>
                   <div className="text-xs text-muted-foreground">Expires 08/28</div>
                 </div>
-                <Button size="sm" variant="outline">Change</Button>
+                <Button size="sm" variant="outline" onClick={() => toast.message("Change card", { description: "Card update flow (demo)." })}>Change</Button>
               </div>
             </div>
 
