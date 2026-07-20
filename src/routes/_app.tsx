@@ -195,11 +195,11 @@ function AppLayout() {
         <div className="p-3 border-t border-sidebar-border">
           <div className="flex items-center gap-3 rounded-xl bg-sidebar-accent p-3">
             <div className="h-9 w-9 rounded-full bg-gradient-gold grid place-items-center text-sm font-bold text-gold-foreground shrink-0">
-              KH
+              {(user?.name || "?").split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold truncate">Karim Hassan</div>
-              <div className="text-xs text-muted-foreground truncate capitalize">{role} · Nile Exports Co.</div>
+              <div className="text-sm font-semibold truncate">{user?.name ?? "…"}</div>
+              <div className="text-xs text-muted-foreground truncate capitalize">{role} · {user?.company ?? ""}</div>
             </div>
             <Button variant="ghost" size="icon" aria-label="Sign out" onClick={handleSignOut}>
               <LogOut className="h-4 w-4" />
