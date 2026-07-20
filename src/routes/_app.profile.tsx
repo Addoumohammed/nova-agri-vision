@@ -71,7 +71,11 @@ function ProfilePage() {
               </span>
             </div>
           </div>
-          <Button variant="outline" className="gap-2 shrink-0 col-span-2 sm:col-auto">
+          <Button
+            variant="outline"
+            className="gap-2 shrink-0 col-span-2 sm:col-auto"
+            onClick={() => toast.message("Upload photo", { description: "Choose a new profile picture (demo)." })}
+          >
             <Upload className="h-4 w-4" /> Upload photo
           </Button>
         </div>
