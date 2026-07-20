@@ -130,7 +130,7 @@ function ProfilePage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <Button className="bg-gradient-primary shadow-glow">{t("profile.save")}</Button>
+              <Button className="bg-gradient-primary shadow-glow" onClick={() => toast.success("Company profile saved")}>{t("profile.save")}</Button>
             </div>
           </div>
 
