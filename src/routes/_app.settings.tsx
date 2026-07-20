@@ -43,7 +43,7 @@ function SettingsPage() {
               <div><Label>Tax ID</Label><Input defaultValue="100-482-018" className="mt-1.5" /></div>
               <div className="md:col-span-2"><Label>Address</Label><Input defaultValue="24 Corniche El Nile, Cairo, Egypt" className="mt-1.5" /></div>
             </div>
-            <div className="mt-5 flex justify-end"><Button>Save changes</Button></div>
+            <div className="mt-5 flex justify-end"><Button onClick={() => toast.success("Company profile saved")}>Save changes</Button></div>
           </div>
 
           <div className="rounded-2xl border border-border bg-card p-6">
