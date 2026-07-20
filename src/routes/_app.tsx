@@ -52,6 +52,11 @@ function AppLayout() {
     { to: "/suppliers", icon: Users, label: t("nav.suppliers") },
     { to: "/buyers", icon: Building2, label: t("nav.buyers") },
   ];
+  const trade: NavItem[] = [
+    { to: "/rfq", icon: FileQuestion, label: "RFQ" },
+    { to: "/quotations", icon: Handshake, label: "Quotations" },
+    { to: "/trade-tools", icon: Globe2, label: "Trade Tools" },
+  ];
   const operations: NavItem[] = [
     { to: "/orders", icon: ClipboardList, label: t("nav.orders") },
     { to: "/invoices", icon: FileText, label: t("nav.invoices") },
@@ -63,6 +68,7 @@ function AppLayout() {
     { to: "/reports", icon: FileBarChart, label: t("nav.reports") },
   ];
   const account: NavItem[] = [
+    { to: "/integrations", icon: Plug, label: "Integrations" },
     { to: "/settings", icon: SettingsIcon, label: t("nav.settings") },
   ];
 
