@@ -118,6 +118,7 @@ function AppLayout() {
         <nav className="flex-1 p-3 overflow-y-auto">
           <Section title={t("nav.section.overview")} items={overview} />
           <Section title={t("nav.section.network")} items={network} />
+          <Section title="Trade" items={trade} />
           <Section title={t("nav.section.operations")} items={operations} />
           <Section title={t("nav.section.insights")} items={insights} />
           <Section title={t("nav.section.account")} items={account} />
