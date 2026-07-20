@@ -145,7 +145,7 @@ export const getFaostatProduction = createServerFn({ method: "GET" })
       const url = `https://faostatservices.fao.org/api/v1/en/data/QCL?${params}`;
       const res = await fetch(url);
       if (!res.ok) return ERR(`FAOSTAT ${res.status}`);
-      const json = (await res.json()) as { data: Array<Record<string, unknown>> };
+      const json = (await res.json()) as { data: Array<Record<string, string | number | null>> };
       return OK({ rows: json.data ?? [] });
     } catch (e) {
       return ERR((e as Error).message);
