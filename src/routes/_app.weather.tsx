@@ -79,12 +79,50 @@ const exportAlerts = [
 
 function WeatherPage() {
   const { t } = useI18n();
+  const [live, setLive] = useState<LiveCurrent | null>(null);
+  const [source, setSource] = useState<"live" | "demo">("demo");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        // Cairo coordinates by default
+        const res = await getWeather({ data: { lat: 30.0444, lon: 31.2357, units: "metric" } });
+        if (!cancelled && res && (res as any).ok) {
+          setLive((res as any).data.current as LiveCurrent);
+          setSource("live");
+        }
+      } catch {
+        /* keep demo */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const temp = live?.temp != null ? Math.round(live.temp) : 28;
+  const feels = live?.feels_like != null ? Math.round(live.feels_like) : 30;
+  const humidity = live?.humidity != null ? `${live.humidity}%` : "62%";
+  const wind = live?.wind != null ? `${Math.round(live.wind * 3.6)} km/h` : "18 km/h";
+  const desc = live?.desc ?? "Partly cloudy";
+  const cityLabel = live?.city ? `${live.city} · Nile Delta` : "Cairo · Nile Delta";
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-display font-bold">{t("weather.title")}</h1>
-        <p className="text-muted-foreground text-sm">{t("weather.sub")}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-display font-bold">{t("weather.title")}</h1>
+          <p className="text-muted-foreground text-sm">{t("weather.sub")}</p>
+        </div>
+        <span
+          className={cn(
+            "text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full",
+            source === "live" ? "bg-emerald-500/15 text-emerald-500" : "bg-muted text-muted-foreground",
+          )}
+        >
+          {source === "live" ? "Live · OpenWeather" : "Demo data"}
+        </span>
       </div>
 
       {/* Current + risk */}
@@ -93,10 +131,10 @@ function WeatherPage() {
           <div className="absolute -top-10 -right-10 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 relative">
             <div className="min-w-0">
-              <div className="text-sm opacity-80">Cairo · Nile Delta</div>
-              <div className="mt-2 text-6xl sm:text-7xl font-display font-bold">28°</div>
-              <div className="opacity-80">Partly cloudy · {t("weather.now")}</div>
-              <div className="mt-1 text-xs opacity-70">Feels like 30° · UV 6 (High)</div>
+              <div className="text-sm opacity-80">{cityLabel}</div>
+              <div className="mt-2 text-6xl sm:text-7xl font-display font-bold">{temp}°</div>
+              <div className="opacity-80 capitalize">{desc} · {t("weather.now")}</div>
+              <div className="mt-1 text-xs opacity-70">Feels like {feels}° · UV 6 (High)</div>
             </div>
             <Sun className="h-16 w-16 sm:h-20 sm:w-20 opacity-90 shrink-0" />
           </div>
