@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Mail, Lock, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BrandMark, LocaleToggle, ThemeToggle } from "@/components/brand";
 import { useI18n } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -16,6 +18,38 @@ function LoginPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success("Signed in");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleForgot(e: React.MouseEvent) {
+    e.preventDefault();
+    const target = email || window.prompt("Enter your account email to reset password:") || "";
+    if (!target) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(target, {
+      redirectTo: `${window.location.origin}/login`,
+    });
+    if (error) toast.error(error.message);
+    else toast.success("Password reset email sent");
+  }
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
@@ -48,14 +82,7 @@ function LoginPage() {
         </div>
 
         <div className="flex-1 flex items-center justify-center">
-          <form
-            className="w-full max-w-sm space-y-5"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setLoading(true);
-              setTimeout(() => navigate({ to: "/dashboard" }), 600);
-            }}
-          >
+          <form className="w-full max-w-sm space-y-5" onSubmit={handleSubmit}>
             <div>
               <h1 className="text-3xl font-display font-bold">{t("auth.login.title")}</h1>
               <p className="mt-1.5 text-sm text-muted-foreground">{t("auth.login.subtitle")}</p>
@@ -65,7 +92,15 @@ function LoginPage() {
               <Label htmlFor="email">{t("auth.email")}</Label>
               <div className="relative">
                 <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" required defaultValue="karim@novapro.com" className="ps-9" />
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className="ps-9"
+                />
               </div>
             </div>
 
@@ -73,7 +108,15 @@ function LoginPage() {
               <Label htmlFor="password">{t("auth.password")}</Label>
               <div className="relative">
                 <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="password" type="password" required defaultValue="••••••••" className="ps-9" />
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="ps-9"
+                />
               </div>
             </div>
 
@@ -81,30 +124,14 @@ function LoginPage() {
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Checkbox defaultChecked /> {t("auth.remember")}
               </label>
-              <a href="#" className="text-sm text-primary hover:underline">
+              <a href="#" onClick={handleForgot} className="text-sm text-primary hover:underline">
                 {t("auth.forgot")}
               </a>
             </div>
 
             <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-glow gap-2">
-              {t("auth.signIn")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+              {loading ? "…" : t("auth.signIn")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </Button>
-
-            <div className="relative py-2">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-background px-2 text-muted-foreground uppercase tracking-wider">
-                  {t("auth.orContinue")}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" type="button">Google</Button>
-              <Button variant="outline" type="button">Apple</Button>
-            </div>
 
             <p className="text-center text-sm text-muted-foreground">
               {t("auth.noAccount")}{" "}
