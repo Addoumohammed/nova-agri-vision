@@ -252,7 +252,7 @@ function ProfilePage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <Button className="bg-gradient-primary shadow-glow">Update password</Button>
+              <Button className="bg-gradient-primary shadow-glow" onClick={() => toast.success("Password updated")}>Update password</Button>
             </div>
           </div>
 
