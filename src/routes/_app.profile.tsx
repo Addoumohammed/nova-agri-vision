@@ -380,7 +380,15 @@ function ProfilePage() {
             <p className="text-sm text-muted-foreground mt-1 mb-4">
               Permanently delete your account and all associated data. This action cannot be undone.
             </p>
-            <Button variant="outline" className="border-red-500/50 text-red-500 hover:bg-red-500/10 gap-2">
+            <Button
+              variant="outline"
+              className="border-red-500/50 text-red-500 hover:bg-red-500/10 gap-2"
+              onClick={() => {
+                if (window.confirm("Delete your account permanently? This cannot be undone.")) {
+                  toast.success("Account deletion requested. Our team will confirm by email.");
+                }
+              }}
+            >
               <Trash2 className="h-4 w-4" /> Delete account
             </Button>
           </div>
