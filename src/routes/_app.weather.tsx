@@ -140,8 +140,8 @@ function WeatherPage() {
           </div>
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 relative">
             {[
-              { icon: Droplets, l: t("weather.humidity"), v: "62%" },
-              { icon: Wind, l: t("weather.wind"), v: "18 km/h" },
+              { icon: Droplets, l: t("weather.humidity"), v: humidity },
+              { icon: Wind, l: t("weather.wind"), v: wind },
               { icon: CloudRain, l: t("weather.rain"), v: "12%" },
               { icon: Thermometer, l: "Pressure", v: "1014 hPa" },
             ].map((m) => (
@@ -153,8 +153,14 @@ function WeatherPage() {
             ))}
           </div>
           <div className="mt-4 relative flex flex-wrap gap-4 text-xs opacity-90">
-            <span className="inline-flex items-center gap-1"><Sunrise className="h-3 w-3" /> 06:14</span>
-            <span className="inline-flex items-center gap-1"><Sunset className="h-3 w-3" /> 17:48</span>
+            <span className="inline-flex items-center gap-1">
+              <Sunrise className="h-3 w-3" />{" "}
+              {live?.sunrise ? new Date(live.sunrise * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "06:14"}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Sunset className="h-3 w-3" />{" "}
+              {live?.sunset ? new Date(live.sunset * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "17:48"}
+            </span>
           </div>
         </div>
 
