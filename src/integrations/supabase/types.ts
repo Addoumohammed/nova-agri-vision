@@ -256,11 +256,14 @@ export type Database = {
       }
       contracts: {
         Row: {
+          auto_execute: boolean
           buyer_company_id: string
           created_at: string
           document_url: string | null
           end_date: string | null
           id: string
+          signed_hash: string | null
+          smart_terms: Json | null
           start_date: string | null
           status: Database["public"]["Enums"]["contract_status"]
           supplier_company_id: string
@@ -269,11 +272,14 @@ export type Database = {
           value_usd: number
         }
         Insert: {
+          auto_execute?: boolean
           buyer_company_id: string
           created_at?: string
           document_url?: string | null
           end_date?: string | null
           id?: string
+          signed_hash?: string | null
+          smart_terms?: Json | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
           supplier_company_id: string
@@ -282,11 +288,14 @@ export type Database = {
           value_usd?: number
         }
         Update: {
+          auto_execute?: boolean
           buyer_company_id?: string
           created_at?: string
           document_url?: string | null
           end_date?: string | null
           id?: string
+          signed_hash?: string | null
+          smart_terms?: Json | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["contract_status"]
           supplier_company_id?: string
@@ -310,6 +319,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      country_regulations: {
+        Row: {
+          country_code: string
+          country_name: string
+          created_at: string
+          id: string
+          import_tariff_pct: number | null
+          notes: string | null
+          product_category: string
+          required_docs: string[]
+          restrictions: string | null
+          vat_pct: number | null
+        }
+        Insert: {
+          country_code: string
+          country_name: string
+          created_at?: string
+          id?: string
+          import_tariff_pct?: number | null
+          notes?: string | null
+          product_category: string
+          required_docs?: string[]
+          restrictions?: string | null
+          vat_pct?: number | null
+        }
+        Update: {
+          country_code?: string
+          country_name?: string
+          created_at?: string
+          id?: string
+          import_tariff_pct?: number | null
+          notes?: string | null
+          product_category?: string
+          required_docs?: string[]
+          restrictions?: string | null
+          vat_pct?: number | null
+        }
+        Relationships: []
+      }
+      currency_rates: {
+        Row: {
+          base: string
+          fetched_at: string
+          quote: string
+          rate: number
+        }
+        Insert: {
+          base: string
+          fetched_at?: string
+          quote: string
+          rate: number
+        }
+        Update: {
+          base?: string
+          fetched_at?: string
+          quote?: string
+          rate?: number
+        }
+        Relationships: []
       }
       farms: {
         Row: {
@@ -537,6 +606,50 @@ export type Database = {
             columns: ["thread_id"]
             isOneToOne: false
             referencedRelation: "message_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      negotiation_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          proposed_currency: string | null
+          proposed_incoterm: Database["public"]["Enums"]["incoterm"] | null
+          proposed_lead_time_days: number | null
+          proposed_price: number | null
+          quotation_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          proposed_currency?: string | null
+          proposed_incoterm?: Database["public"]["Enums"]["incoterm"] | null
+          proposed_lead_time_days?: number | null
+          proposed_price?: number | null
+          quotation_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          proposed_currency?: string | null
+          proposed_incoterm?: Database["public"]["Enums"]["incoterm"] | null
+          proposed_lead_time_days?: number | null
+          proposed_price?: number | null
+          quotation_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "negotiation_messages_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "quotations"
             referencedColumns: ["id"]
           },
         ]
@@ -867,6 +980,60 @@ export type Database = {
           },
         ]
       }
+      product_certifications: {
+        Row: {
+          cert_type: string
+          company_id: string | null
+          created_at: string
+          document_url: string | null
+          expiry_date: string | null
+          id: string
+          issued_date: string | null
+          issuer: string | null
+          product_id: string | null
+          verified: boolean
+        }
+        Insert: {
+          cert_type: string
+          company_id?: string | null
+          created_at?: string
+          document_url?: string | null
+          expiry_date?: string | null
+          id?: string
+          issued_date?: string | null
+          issuer?: string | null
+          product_id?: string | null
+          verified?: boolean
+        }
+        Update: {
+          cert_type?: string
+          company_id?: string | null
+          created_at?: string
+          document_url?: string | null
+          expiry_date?: string | null
+          id?: string
+          issued_date?: string | null
+          issuer?: string | null
+          product_id?: string | null
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_certifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_certifications_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           active: boolean
@@ -980,6 +1147,75 @@ export type Database = {
           },
         ]
       }
+      quotations: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          incoterm: Database["public"]["Enums"]["incoterm"]
+          lead_time_days: number | null
+          notes: string | null
+          payment_terms: string | null
+          quantity: number
+          rfq_id: string
+          status: Database["public"]["Enums"]["quotation_status"]
+          supplier_company_id: string | null
+          supplier_id: string
+          unit_price: number
+          updated_at: string
+          validity_date: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          incoterm: Database["public"]["Enums"]["incoterm"]
+          lead_time_days?: number | null
+          notes?: string | null
+          payment_terms?: string | null
+          quantity: number
+          rfq_id: string
+          status?: Database["public"]["Enums"]["quotation_status"]
+          supplier_company_id?: string | null
+          supplier_id: string
+          unit_price: number
+          updated_at?: string
+          validity_date?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          incoterm?: Database["public"]["Enums"]["incoterm"]
+          lead_time_days?: number | null
+          notes?: string | null
+          payment_terms?: string | null
+          quantity?: number
+          rfq_id?: string
+          status?: Database["public"]["Enums"]["quotation_status"]
+          supplier_company_id?: string | null
+          supplier_id?: string
+          unit_price?: number
+          updated_at?: string
+          validity_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotations_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "rfqs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotations_supplier_company_id_fkey"
+            columns: ["supplier_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           file_url: string | null
@@ -1009,6 +1245,83 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      rfqs: {
+        Row: {
+          buyer_company_id: string | null
+          buyer_id: string
+          created_at: string
+          currency: string
+          deadline: string | null
+          description: string | null
+          destination_country: string | null
+          destination_port: string | null
+          id: string
+          incoterm: Database["public"]["Enums"]["incoterm"] | null
+          product_category: string | null
+          product_name: string
+          quantity: number
+          quotations_count: number
+          required_certifications: string[]
+          status: Database["public"]["Enums"]["rfq_status"]
+          target_price: number | null
+          title: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_company_id?: string | null
+          buyer_id: string
+          created_at?: string
+          currency?: string
+          deadline?: string | null
+          description?: string | null
+          destination_country?: string | null
+          destination_port?: string | null
+          id?: string
+          incoterm?: Database["public"]["Enums"]["incoterm"] | null
+          product_category?: string | null
+          product_name: string
+          quantity: number
+          quotations_count?: number
+          required_certifications?: string[]
+          status?: Database["public"]["Enums"]["rfq_status"]
+          target_price?: number | null
+          title: string
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_company_id?: string | null
+          buyer_id?: string
+          created_at?: string
+          currency?: string
+          deadline?: string | null
+          description?: string | null
+          destination_country?: string | null
+          destination_port?: string | null
+          id?: string
+          incoterm?: Database["public"]["Enums"]["incoterm"] | null
+          product_category?: string | null
+          product_name?: string
+          quantity?: number
+          quotations_count?: number
+          required_certifications?: string[]
+          status?: Database["public"]["Enums"]["rfq_status"]
+          target_price?: number | null
+          title?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfqs_buyer_company_id_fkey"
+            columns: ["buyer_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       role_permissions: {
         Row: {
@@ -1184,6 +1497,63 @@ export type Database = {
             columns: ["thread_id"]
             isOneToOne: false
             referencedRelation: "message_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trade_documents: {
+        Row: {
+          created_at: string
+          doc_name: string
+          doc_type: string
+          file_url: string | null
+          id: string
+          issued_date: string | null
+          notes: string | null
+          order_id: string | null
+          shipment_id: string | null
+          status: string
+          uploader_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_name: string
+          doc_type: string
+          file_url?: string | null
+          id?: string
+          issued_date?: string | null
+          notes?: string | null
+          order_id?: string | null
+          shipment_id?: string | null
+          status?: string
+          uploader_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_name?: string
+          doc_type?: string
+          file_url?: string | null
+          id?: string
+          issued_date?: string | null
+          notes?: string | null
+          order_id?: string | null
+          shipment_id?: string | null
+          status?: string
+          uploader_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_documents_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_documents_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
             referencedColumns: ["id"]
           },
         ]
@@ -1394,6 +1764,18 @@ export type Database = {
         | "logistics"
         | "other"
       contract_status: "draft" | "active" | "completed" | "terminated"
+      incoterm:
+        | "EXW"
+        | "FCA"
+        | "FAS"
+        | "FOB"
+        | "CFR"
+        | "CIF"
+        | "CPT"
+        | "CIP"
+        | "DAP"
+        | "DPU"
+        | "DDP"
       invoice_status: "draft" | "sent" | "paid" | "overdue" | "void"
       notification_kind:
         | "system"
@@ -1424,6 +1806,14 @@ export type Database = {
         | "succeeded"
         | "failed"
         | "refunded"
+      quotation_status:
+        | "submitted"
+        | "under_negotiation"
+        | "accepted"
+        | "rejected"
+        | "expired"
+        | "withdrawn"
+      rfq_status: "draft" | "open" | "closed" | "awarded" | "cancelled"
       shipment_mode: "sea" | "air" | "land" | "multimodal"
       shipment_status:
         | "preparing"
@@ -1579,6 +1969,19 @@ export const Constants = {
         "other",
       ],
       contract_status: ["draft", "active", "completed", "terminated"],
+      incoterm: [
+        "EXW",
+        "FCA",
+        "FAS",
+        "FOB",
+        "CFR",
+        "CIF",
+        "CPT",
+        "CIP",
+        "DAP",
+        "DPU",
+        "DDP",
+      ],
       invoice_status: ["draft", "sent", "paid", "overdue", "void"],
       notification_kind: [
         "system",
@@ -1613,6 +2016,15 @@ export const Constants = {
         "failed",
         "refunded",
       ],
+      quotation_status: [
+        "submitted",
+        "under_negotiation",
+        "accepted",
+        "rejected",
+        "expired",
+        "withdrawn",
+      ],
+      rfq_status: ["draft", "open", "closed", "awarded", "cancelled"],
       shipment_mode: ["sea", "air", "land", "multimodal"],
       shipment_status: [
         "preparing",
