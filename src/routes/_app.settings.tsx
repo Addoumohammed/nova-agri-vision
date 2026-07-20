@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Settings as SettingsIcon, Bell, Shield, CreditCard, Users, Globe2, Palette } from "lucide-react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
