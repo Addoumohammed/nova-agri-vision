@@ -50,18 +50,35 @@ function AppLayout() {
   const { t } = useI18n();
   const { role } = useRole();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [user, setUser] = useState<{ email: string; name: string; company: string } | null>(null);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (!u) return;
+      const meta = (u.user_metadata ?? {}) as { full_name?: string; company?: string };
+      setUser({
+        email: u.email ?? "",
+        name: meta.full_name || (u.email ?? "").split("@")[0] || "Account",
+        company: meta.company || "Nova Pro",
+      });
+    });
+  }, []);
 
   async function handleSignOut() {
     try {
+      await queryClient.cancelQueries();
+      queryClient.clear();
       await supabase.auth.signOut();
     } catch (e) {
       console.error(e);
     }
     toast.success("Signed out");
-    navigate({ to: "/login" });
+    navigate({ to: "/login", replace: true });
   }
 
   function handleSearchSubmit(e: React.FormEvent) {
