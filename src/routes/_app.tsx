@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   Bot,
@@ -21,8 +21,10 @@ import {
   Handshake,
   Globe2,
   Plug,
+  UserCircle2,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { BrandMark, LocaleToggle, ThemeToggle } from "@/components/brand";
 import { RoleSwitcher } from "@/components/role-switcher";
 import { Button } from "@/components/ui/button";
@@ -30,8 +32,6 @@ import { Input } from "@/components/ui/input";
 import { useI18n } from "@/lib/i18n";
 import { useRole } from "@/lib/role";
 import { cn } from "@/lib/utils";
-
-import { redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_app")({
