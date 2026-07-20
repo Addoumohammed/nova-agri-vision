@@ -200,15 +200,26 @@ function AppLayout() {
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)}>
               <Menu className="h-5 w-5" />
             </Button>
-            <div className="relative flex-1 max-w-md">
+            <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search markets, shipments, insights…" className="ps-9 bg-card/60" />
-            </div>
+              <Input
+                placeholder="Search markets, shipments, insights…"
+                className="ps-9 bg-card/60"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </form>
             <div className="ms-auto flex items-center gap-1">
               <div className="hidden md:block"><RoleSwitcher /></div>
               <LocaleToggle />
               <ThemeToggle />
-              <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Notifications"
+                className="relative"
+                onClick={() => toast.message("No new notifications", { description: "You're all caught up." })}
+              >
                 <Bell className="h-4 w-4" />
                 <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
               </Button>
