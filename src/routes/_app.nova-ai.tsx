@@ -259,9 +259,15 @@ function NovaAiPage() {
     setInput("");
     setSystemHint(hint);
     try {
+      let fileList: FileList | undefined;
+      if (attachments.length > 0) {
+        const dt = new DataTransfer();
+        attachments.forEach((f) => dt.items.add(f));
+        fileList = dt.files;
+      }
       await sendMessage({
         text: text || "Please analyze the attached file.",
-        files: attachments.length > 0 ? attachments : undefined,
+        files: fileList,
       });
       setAttachments([]);
     } catch (e) {
