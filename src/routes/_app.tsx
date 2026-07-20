@@ -117,6 +117,7 @@ function AppLayout() {
     { to: "/reports", icon: FileBarChart, label: t("nav.reports") },
   ];
   const account: NavItem[] = [
+    { to: "/profile", icon: UserCircle2, label: t("nav.profile") },
     { to: "/integrations", icon: Plug, label: "Integrations" },
     { to: "/settings", icon: SettingsIcon, label: t("nav.settings") },
   ];
