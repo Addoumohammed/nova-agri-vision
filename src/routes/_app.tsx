@@ -17,6 +17,10 @@ import {
   Search,
   Menu,
   X,
+  FileQuestion,
+  Handshake,
+  Globe2,
+  Plug,
 } from "lucide-react";
 import { useState } from "react";
 import { BrandMark, LocaleToggle, ThemeToggle } from "@/components/brand";
