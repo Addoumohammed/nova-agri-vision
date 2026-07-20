@@ -191,7 +191,9 @@ export async function requireUserFromRequest(request: Request): Promise<string> 
 }
 
 /** GPT-5.6 chat-completions requests must set reasoning_effort:"none" when using tools/streaming. */
-export function providerOptionsFor(modelId: string): Record<string, unknown> | undefined {
+export function providerOptionsFor(
+  modelId: string,
+): Record<string, Record<string, import("ai").JSONValue>> | undefined {
   if (modelId.startsWith("openai/gpt-5.6")) {
     return { lovable: { reasoningEffort: "none" } };
   }
