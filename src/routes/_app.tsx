@@ -48,8 +48,49 @@ type NavItem = { to: string; icon: React.ComponentType<{ className?: string }>; 
 function AppLayout() {
   const { t } = useI18n();
   const { role } = useRole();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  async function handleSignOut() {
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error(e);
+    }
+    toast.success("Signed out");
+    navigate({ to: "/login" });
+  }
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const q = search.trim().toLowerCase();
+    if (!q) return;
+    const map: Record<string, string> = {
+      dashboard: "/dashboard", ai: "/nova-ai", copilot: "/nova-ai", nova: "/nova-ai",
+      market: "/market", marketplace: "/market",
+      supplier: "/suppliers", suppliers: "/suppliers",
+      buyer: "/buyers", buyers: "/buyers",
+      rfq: "/rfq", quote: "/quotations", quotations: "/quotations",
+      trade: "/trade-tools", order: "/orders", orders: "/orders",
+      invoice: "/invoices", invoices: "/invoices",
+      shipment: "/export", shipments: "/export", export: "/export",
+      analytics: "/analytics", weather: "/weather",
+      report: "/reports", reports: "/reports",
+      integration: "/integrations", integrations: "/integrations",
+      setting: "/settings", settings: "/settings",
+      profile: "/profile", account: "/profile",
+    };
+    const match = Object.entries(map).find(([k]) => q.includes(k));
+    if (match) {
+      navigate({ to: match[1] });
+      setSearch("");
+    } else {
+      toast.message(`No results for "${search}"`);
+    }
+  }
+
 
   const overview: NavItem[] = [
     { to: "/dashboard", icon: LayoutDashboard, label: t("nav.dashboard") },
