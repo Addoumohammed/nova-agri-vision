@@ -23,7 +23,8 @@ import {
   Plug,
   UserCircle2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { BrandMark, LocaleToggle, ThemeToggle } from "@/components/brand";
 import { RoleSwitcher } from "@/components/role-switcher";
@@ -49,18 +50,35 @@ function AppLayout() {
   const { t } = useI18n();
   const { role } = useRole();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [user, setUser] = useState<{ email: string; name: string; company: string } | null>(null);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (!u) return;
+      const meta = (u.user_metadata ?? {}) as { full_name?: string; company?: string };
+      setUser({
+        email: u.email ?? "",
+        name: meta.full_name || (u.email ?? "").split("@")[0] || "Account",
+        company: meta.company || "Nova Pro",
+      });
+    });
+  }, []);
 
   async function handleSignOut() {
     try {
+      await queryClient.cancelQueries();
+      queryClient.clear();
       await supabase.auth.signOut();
     } catch (e) {
       console.error(e);
     }
     toast.success("Signed out");
-    navigate({ to: "/login" });
+    navigate({ to: "/login", replace: true });
   }
 
   function handleSearchSubmit(e: React.FormEvent) {
@@ -177,11 +195,11 @@ function AppLayout() {
         <div className="p-3 border-t border-sidebar-border">
           <div className="flex items-center gap-3 rounded-xl bg-sidebar-accent p-3">
             <div className="h-9 w-9 rounded-full bg-gradient-gold grid place-items-center text-sm font-bold text-gold-foreground shrink-0">
-              KH
+              {(user?.name || "?").split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold truncate">Karim Hassan</div>
-              <div className="text-xs text-muted-foreground truncate capitalize">{role} · Nile Exports Co.</div>
+              <div className="text-sm font-semibold truncate">{user?.name ?? "…"}</div>
+              <div className="text-xs text-muted-foreground truncate capitalize">{role} · {user?.company ?? ""}</div>
             </div>
             <Button variant="ghost" size="icon" aria-label="Sign out" onClick={handleSignOut}>
               <LogOut className="h-4 w-4" />
