@@ -137,7 +137,7 @@ function SettingsPage() {
                   <div className="text-xs text-muted-foreground">Expires 09/28</div>
                 </div>
               </div>
-              <Button size="sm" variant="outline">Update</Button>
+              <Button size="sm" variant="outline" onClick={() => toast.message("Update card", { description: "Card update flow will open here." })}>Update</Button>
             </div>
           </div>
         </TabsContent>
