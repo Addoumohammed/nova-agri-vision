@@ -286,7 +286,12 @@ function ProfilePage() {
                   {s.cur ? (
                     <span className="text-xs font-semibold text-emerald-500">Current</span>
                   ) : (
-                    <Button size="sm" variant="ghost" className="text-red-500 gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-red-500 gap-1"
+                      onClick={() => toast.success(`Session on ${s.d} revoked`)}
+                    >
                       <Trash2 className="h-3 w-3" /> Revoke
                     </Button>
                   )}
