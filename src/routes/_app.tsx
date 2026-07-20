@@ -183,11 +183,9 @@ function AppLayout() {
               <div className="text-sm font-semibold truncate">Karim Hassan</div>
               <div className="text-xs text-muted-foreground truncate capitalize">{role} · Nile Exports Co.</div>
             </div>
-            <Link to="/">
-              <Button variant="ghost" size="icon" aria-label="Sign out">
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </Link>
+            <Button variant="ghost" size="icon" aria-label="Sign out" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </aside>
