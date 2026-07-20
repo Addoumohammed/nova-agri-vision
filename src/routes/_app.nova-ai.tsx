@@ -114,7 +114,7 @@ function NovaAiPage() {
   const [systemHint, setSystemHint] = useState<string | undefined>();
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<{ stop: () => void; start: () => void } | null>(null);
 
   const refreshConversations = async () => {
     try {
