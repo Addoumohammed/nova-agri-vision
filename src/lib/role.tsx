@@ -45,9 +45,27 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stored = typeof window !== "undefined" ? (localStorage.getItem("nova-role") as Role | null) : null;
     if (stored && MATRIX[stored]) setRoleState(stored);
+    // Sync from user_roles table when signed in
+    (async () => {
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) return;
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userData.user.id)
+          .limit(1)
+          .maybeSingle();
+        const r = (data?.role as Role | undefined);
+        if (r && MATRIX[r] && !stored) setRoleState(r);
+      } catch {
+        /* ignore */
+      }
+    })();
   }, []);
   useEffect(() => {
-    try { localStorage.setItem("nova-role", role); } catch {}
+    try { localStorage.setItem("nova-role", role); } catch { /* noop */ }
   }, [role]);
   const can = (p: Permission) => MATRIX[role].includes(p);
   return <RoleContext.Provider value={{ role, setRole: setRoleState, can }}>{children}</RoleContext.Provider>;
