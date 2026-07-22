@@ -1,7 +1,8 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Mail, Lock, User, Building2, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, Building2, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,30 +19,50 @@ export const Route = createFileRoute("/register")({
   component: RegisterPage,
 });
 
+const registerSchema = z.object({
+  name: z.string().trim().min(2, "Please enter your name").max(80),
+  company: z.string().trim().min(2, "Please enter your company").max(120),
+  email: z.string().trim().email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(72, "Password is too long"),
+});
+
 function RegisterPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", company: "", email: "", password: "" });
+  const [errors, setErrors] = useState<Partial<Record<keyof typeof form, string>>>({});
 
-  const bind = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const bind = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((f) => ({ ...f, [k]: e.target.value }));
+    if (errors[k]) setErrors((p) => ({ ...p, [k]: undefined }));
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
-    if (form.password.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    const parsed = registerSchema.safeParse(form);
+    if (!parsed.success) {
+      const fieldErrors: typeof errors = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0] as keyof typeof form;
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
       return;
     }
+    setErrors({});
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
+        email: parsed.data.email,
+        password: parsed.data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
-          data: { full_name: form.name, company: form.company },
+          data: { full_name: parsed.data.name, company: parsed.data.company },
         },
       });
       if (error) {
