@@ -26,6 +26,7 @@ import { Route as AppRfqRouteImport } from './routes/_app.rfq'
 import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppQuotationsRouteImport } from './routes/_app.quotations'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
+import { Route as AppProductsRouteImport } from './routes/_app.products'
 import { Route as AppOrdersRouteImport } from './routes/_app.orders'
 import { Route as AppNovaAiRouteImport } from './routes/_app.nova-ai'
 import { Route as AppMarketRouteImport } from './routes/_app.market'
@@ -120,6 +121,11 @@ const AppProfileRoute = AppProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProductsRoute = AppProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOrdersRoute = AppOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/market': typeof AppMarketRoute
   '/nova-ai': typeof AppNovaAiRoute
   '/orders': typeof AppOrdersRoute
+  '/products': typeof AppProductsRoute
   '/profile': typeof AppProfileRoute
   '/quotations': typeof AppQuotationsRoute
   '/reports': typeof AppReportsRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByTo {
   '/market': typeof AppMarketRoute
   '/nova-ai': typeof AppNovaAiRoute
   '/orders': typeof AppOrdersRoute
+  '/products': typeof AppProductsRoute
   '/profile': typeof AppProfileRoute
   '/quotations': typeof AppQuotationsRoute
   '/reports': typeof AppReportsRoute
@@ -237,6 +245,7 @@ export interface FileRoutesById {
   '/_app/market': typeof AppMarketRoute
   '/_app/nova-ai': typeof AppNovaAiRoute
   '/_app/orders': typeof AppOrdersRoute
+  '/_app/products': typeof AppProductsRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/quotations': typeof AppQuotationsRoute
   '/_app/reports': typeof AppReportsRoute
@@ -266,6 +275,7 @@ export interface FileRouteTypes {
     | '/market'
     | '/nova-ai'
     | '/orders'
+    | '/products'
     | '/profile'
     | '/quotations'
     | '/reports'
@@ -293,6 +303,7 @@ export interface FileRouteTypes {
     | '/market'
     | '/nova-ai'
     | '/orders'
+    | '/products'
     | '/profile'
     | '/quotations'
     | '/reports'
@@ -321,6 +332,7 @@ export interface FileRouteTypes {
     | '/_app/market'
     | '/_app/nova-ai'
     | '/_app/orders'
+    | '/_app/products'
     | '/_app/profile'
     | '/_app/quotations'
     | '/_app/reports'
@@ -466,6 +478,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/products': {
+      id: '/_app/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AppProductsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/orders': {
       id: '/_app/orders'
       path: '/orders'
@@ -542,6 +561,7 @@ interface AppRouteChildren {
   AppMarketRoute: typeof AppMarketRoute
   AppNovaAiRoute: typeof AppNovaAiRoute
   AppOrdersRoute: typeof AppOrdersRoute
+  AppProductsRoute: typeof AppProductsRoute
   AppProfileRoute: typeof AppProfileRoute
   AppQuotationsRoute: typeof AppQuotationsRoute
   AppReportsRoute: typeof AppReportsRoute
@@ -563,6 +583,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMarketRoute: AppMarketRoute,
   AppNovaAiRoute: AppNovaAiRoute,
   AppOrdersRoute: AppOrdersRoute,
+  AppProductsRoute: AppProductsRoute,
   AppProfileRoute: AppProfileRoute,
   AppQuotationsRoute: AppQuotationsRoute,
   AppReportsRoute: AppReportsRoute,
