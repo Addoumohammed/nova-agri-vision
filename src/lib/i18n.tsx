@@ -377,7 +377,6 @@ const dict = {
     "orders.pagination.next": "Next",
     "orders.pagination.pageOf": "Page {page} of {total}",
     "nav.inventory": "Inventory",
-    "nav.products": "Products",
     "inventory.title": "Inventory",
     "inventory.subtitle": "Real-time stock across warehouses. Track quantities, low-stock alerts and every movement.",
     "inventory.new": "New stock row",
