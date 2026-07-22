@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ClientOnly } from "@tanstack/react-router";
 import { Ship, Plane, Truck, MapPin, Package } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { DataTable, type Column } from "@/components/data-table";
@@ -8,7 +9,9 @@ import { StatCard } from "@/components/stat-card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { shipments, currency, type Shipment } from "@/lib/demo-data";
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
+
+const NovaMap = lazy(() => import("@/components/nova-map"));
 
 export const Route = createFileRoute("/_app/shipments")({
   component: ShipmentsPage,
@@ -66,6 +69,25 @@ function ShipmentsPage() {
         <StatCard label="In transit" value={inTransit.toString()} delta={7} icon={Ship} tint="info" />
         <StatCard label="Delayed" value={delayed.toString()} delta={-1} icon={Truck} tint="danger" />
         <StatCard label="Cargo value" value={currency(value)} delta={12} icon={Package} tint="gold" />
+      </div>
+      <div className="mb-6 rounded-lg border bg-card p-4">
+        <div className="mb-3">
+          <div className="text-sm font-semibold">Live route map</div>
+          <div className="text-xs text-muted-foreground">Origin → destination for filtered shipments</div>
+        </div>
+        <ClientOnly fallback={<div className="h-[360px] rounded-lg bg-muted/30 animate-pulse" />}>
+          <Suspense fallback={<div className="h-[360px] rounded-lg bg-muted/30 animate-pulse" />}>
+            <NovaMap
+              routes={filtered.slice(0, 8).map((s) => ({
+                id: s.id,
+                label: `${s.id} · ${s.carrier}`,
+                origin: s.origin,
+                destination: s.destination,
+                color: s.status === "delayed" ? "#ef4444" : s.status === "delivered" ? "#3b82f6" : "#10b981",
+              }))}
+            />
+          </Suspense>
+        </ClientOnly>
       </div>
       <DataTable
         data={filtered}
