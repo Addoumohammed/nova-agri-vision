@@ -38,32 +38,62 @@ export function MarketFilters({ filters, categories, totalCount }: Props) {
     const trimmed = qLocal.trim();
     if (trimmed === filters.q) return;
     const t = window.setTimeout(() => {
-      navigate({ to: ".", search: (prev) => ({ ...prev, q: trimmed, page: 1 }) });
+      navigate({
+        to: ".",
+        search: {
+          q: trimmed,
+          category: filters.category,
+          country: filters.country,
+          sort: filters.sort,
+          page: 1,
+        },
+      });
     }, 250);
     return () => window.clearTimeout(t);
-  }, [qLocal, filters.q, navigate]);
+  }, [qLocal, filters, navigate]);
 
   function updateCategory(slug: string) {
     navigate({
       to: ".",
-      search: (prev) => ({ ...prev, category: prev.category === slug ? "" : slug, page: 1 }),
+      search: {
+        q: filters.q,
+        category: filters.category === slug ? "" : slug,
+        country: filters.country,
+        sort: filters.sort,
+        page: 1,
+      },
     });
   }
   function updateCountry(iso: string) {
     navigate({
       to: ".",
-      search: (prev) => ({ ...prev, country: iso === "__all__" ? "" : iso, page: 1 }),
+      search: {
+        q: filters.q,
+        category: filters.category,
+        country: iso === "__all__" ? "" : iso,
+        sort: filters.sort,
+        page: 1,
+      },
     });
   }
   function updateSort(sort: string) {
     navigate({
       to: ".",
-      search: (prev) => ({ ...prev, sort: sort as MarketplaceFilters["sort"], page: 1 }),
+      search: {
+        q: filters.q,
+        category: filters.category,
+        country: filters.country,
+        sort: sort as MarketplaceFilters["sort"],
+        page: 1,
+      },
     });
   }
   function clearAll() {
     setQLocal("");
-    navigate({ to: ".", search: () => ({ q: "", category: "", country: "", sort: "relevance", page: 1 }) });
+    navigate({
+      to: ".",
+      search: { q: "", category: "", country: "", sort: "relevance", page: 1 },
+    });
   }
 
   const hasAny = filters.q || filters.category || filters.country || filters.sort !== "relevance";

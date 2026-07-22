@@ -16,6 +16,7 @@ interface Props {
 
 export function MarketPagination({ page, pageSize, total }: Props) {
   const navigate = routeApi.useNavigate();
+  const search = routeApi.useSearch();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   if (totalPages <= 1) return null;
 
@@ -23,12 +24,16 @@ export function MarketPagination({ page, pageSize, total }: Props) {
   const end = Math.min(total, page * pageSize);
 
   function go(delta: number) {
+    const nextPage = Math.min(totalPages, Math.max(1, page + delta));
     navigate({
       to: ".",
-      search: (prev) => ({
-        ...prev,
-        page: Math.min(totalPages, Math.max(1, (prev.page ?? 1) + delta)),
-      }),
+      search: {
+        q: search.q,
+        category: search.category,
+        country: search.country,
+        sort: search.sort,
+        page: nextPage,
+      },
     });
   }
 
