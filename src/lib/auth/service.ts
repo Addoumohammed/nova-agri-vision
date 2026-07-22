@@ -25,6 +25,76 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
+// Password policy — OWASP-aligned. Mirrors the /reset-password page so we
+// have a single source of truth for what "strong enough" means at any
+// point a password is created or changed.
+export const MIN_PASSWORD_LENGTH = 8;
+export const MAX_PASSWORD_LENGTH = 72; // Supabase / bcrypt cap
+
+export const passwordPolicySchema = z
+  .string()
+  .min(MIN_PASSWORD_LENGTH, { message: "auth.errors.passwordTooShort" })
+  .max(MAX_PASSWORD_LENGTH, { message: "auth.errors.passwordTooLong" })
+  .regex(/[a-z]/, { message: "auth.errors.passwordWeak" })
+  .regex(/[A-Z]/, { message: "auth.errors.passwordWeak" })
+  .regex(/\d/, { message: "auth.errors.passwordWeak" });
+
+export const registerSchema = z
+  .object({
+    name: z.string().trim().min(2, { message: "auth.errors.nameRequired" }).max(80),
+    company: z.string().trim().min(2, { message: "auth.errors.companyRequired" }).max(120),
+    email: emailSchema,
+    password: passwordPolicySchema,
+    confirmPassword: z.string(),
+  })
+  .refine((v) => v.password === v.confirmPassword, {
+    message: "auth.errors.passwordMismatch",
+    path: ["confirmPassword"],
+  });
+
+export type RegisterInput = z.infer<typeof registerSchema>;
+
+// --------------------------------------------------------------------
+// Password strength scoring — pure, deterministic. Consumed by any
+// password-change surface (register, reset, change-password).
+// --------------------------------------------------------------------
+
+export type PasswordStrengthLevel = 0 | 1 | 2 | 3 | 4;
+
+export interface PasswordStrength {
+  score: PasswordStrengthLevel;
+  labelKey:
+    | "auth.password.strength.tooWeak"
+    | "auth.password.strength.weak"
+    | "auth.password.strength.fair"
+    | "auth.password.strength.strong"
+    | "auth.password.strength.excellent";
+  /** Tailwind background token — semantic, dark-mode friendly. */
+  colorClass: string;
+}
+
+export function scorePassword(pw: string): PasswordStrength {
+  if (!pw) {
+    return { score: 0, labelKey: "auth.password.strength.tooWeak", colorClass: "bg-destructive" };
+  }
+  let raw = 0;
+  if (pw.length >= MIN_PASSWORD_LENGTH) raw++;
+  if (pw.length >= 12) raw++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) raw++;
+  if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) raw++;
+  const score = Math.min(4, raw) as PasswordStrengthLevel;
+  const table: Record<PasswordStrengthLevel, PasswordStrength> = {
+    0: { score: 0, labelKey: "auth.password.strength.tooWeak", colorClass: "bg-destructive" },
+    1: { score: 1, labelKey: "auth.password.strength.weak", colorClass: "bg-destructive" },
+    2: { score: 2, labelKey: "auth.password.strength.fair", colorClass: "bg-amber-500" },
+    3: { score: 3, labelKey: "auth.password.strength.strong", colorClass: "bg-primary" },
+    4: { score: 4, labelKey: "auth.password.strength.excellent", colorClass: "bg-emerald-500" },
+  };
+  return table[score];
+}
+
+
+
 // --------------------------------------------------------------------
 // Safe redirect
 // --------------------------------------------------------------------
@@ -55,10 +125,16 @@ export function safeRedirect(path: unknown, fallback = "/dashboard"): string {
 export type AuthErrorKey =
   | "auth.errors.invalidCredentials"
   | "auth.errors.emailNotConfirmed"
+  | "auth.errors.emailInvalid"
   | "auth.errors.rateLimit"
   | "auth.errors.network"
   | "auth.errors.noSession"
-  | "auth.errors.generic";
+  | "auth.errors.generic"
+  | "auth.errors.emailInUse"
+  | "auth.errors.passwordWeak"
+  | "auth.errors.passwordTooShort"
+  | "auth.errors.passwordTooLong"
+  | "auth.errors.signupFailed";
 
 export type AuthErrorField = "email" | "password";
 
@@ -147,3 +223,63 @@ export async function sendPasswordReset(email: string): Promise<ResetResult> {
     return { ok: false, error: humanizeAuthError((err as Error)?.message) };
   }
 }
+
+/**
+ * Signup-specific error humanization — includes duplicate-account and
+ * weak-password cases that only surface during registration.
+ */
+export function humanizeSignupError(message: string | undefined | null): HumanizedAuthError {
+  const m = (message ?? "").toLowerCase();
+  if (m.includes("already registered") || m.includes("user already") || m.includes("already exists")) {
+    return { key: "auth.errors.emailInUse", field: "email" };
+  }
+  if (m.includes("password") && (m.includes("weak") || m.includes("insecure") || m.includes("pwned") || m.includes("compromised"))) {
+    return { key: "auth.errors.passwordWeak", field: "password" };
+  }
+  if (m.includes("password") && m.includes("short")) {
+    return { key: "auth.errors.passwordTooShort", field: "password" };
+  }
+  if (m.includes("invalid email") || m.includes("email address is invalid")) {
+    return { key: "auth.errors.emailInvalid", field: "email" };
+  }
+  if (m.includes("rate limit") || m.includes("too many")) {
+    return { key: "auth.errors.rateLimit" };
+  }
+  if (m.includes("network") || m.includes("fetch") || m.includes("failed to fetch")) {
+    return { key: "auth.errors.network" };
+  }
+  return { key: "auth.errors.signupFailed" };
+}
+
+// --------------------------------------------------------------------
+// Sign up
+// --------------------------------------------------------------------
+
+export interface SignUpProfile {
+  name: string;
+  company: string;
+  email: string;
+  password: string;
+}
+
+export type SignUpResult =
+  | { ok: true; needsEmailConfirmation: boolean }
+  | { ok: false; error: HumanizedAuthError };
+
+export async function signUpWithPassword(input: SignUpProfile): Promise<SignUpResult> {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: input.email,
+      password: input.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        data: { full_name: input.name, company: input.company },
+      },
+    });
+    if (error) return { ok: false, error: humanizeSignupError(error.message) };
+    return { ok: true, needsEmailConfirmation: !data.session };
+  } catch (err) {
+    return { ok: false, error: humanizeSignupError((err as Error)?.message) };
+  }
+}
+
