@@ -73,7 +73,7 @@ export const orderIdSchema = z.object({ id: uuid });
 const isoDate = z
   .string()
   .trim()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "orders.error.date" })
+  .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "orders.error.eta" })
   .optional()
   .or(z.literal(""));
 
@@ -92,7 +92,7 @@ export const createOrderSchema = z
     items: z
       .array(orderItemInputSchema)
       .min(1, { message: "orders.error.itemsRequired" })
-      .max(MAX_ITEMS_PER_ORDER, { message: "orders.error.tooManyItems" }),
+      .max(MAX_ITEMS_PER_ORDER, { message: "orders.error.itemsRequired" }),
     submit: z.boolean().default(false),
   })
   .refine((v) => v.buyerCompanyId !== v.supplierCompanyId, {
@@ -112,7 +112,7 @@ export const updateOrderSchema = z
     items: z
       .array(orderItemInputSchema)
       .min(1, { message: "orders.error.itemsRequired" })
-      .max(MAX_ITEMS_PER_ORDER, { message: "orders.error.tooManyItems" }),
+      .max(MAX_ITEMS_PER_ORDER, { message: "orders.error.itemsRequired" }),
   });
 export type UpdateOrderInput = z.infer<typeof updateOrderSchema>;
 
@@ -125,6 +125,6 @@ export type SetOrderStatusInput = z.infer<typeof setOrderStatusSchema>;
 
 export const cancelOrderSchema = z.object({
   id: uuid,
-  reason: z.string().trim().min(2, { message: "orders.error.cancelReason" }).max(MAX_CANCEL_REASON_LEN),
+  reason: z.string().trim().min(2, { message: "orders.error.reasonRequired" }).max(MAX_CANCEL_REASON_LEN),
 });
 export type CancelOrderInput = z.infer<typeof cancelOrderSchema>;
