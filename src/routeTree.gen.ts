@@ -33,6 +33,7 @@ import { Route as AppMarketRouteImport } from './routes/_app.market'
 import { Route as AppInvoicesRouteImport } from './routes/_app.invoices'
 import { Route as AppInventoryRouteImport } from './routes/_app.inventory'
 import { Route as AppIntegrationsRouteImport } from './routes/_app.integrations'
+import { Route as AppFarmsRouteImport } from './routes/_app.farms'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppBuyersRouteImport } from './routes/_app.buyers'
@@ -157,6 +158,11 @@ const AppIntegrationsRoute = AppIntegrationsRouteImport.update({
   path: '/integrations',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFarmsRoute = AppFarmsRouteImport.update({
+  id: '/farms',
+  path: '/farms',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppExportRoute = AppExportRouteImport.update({
   id: '/export',
   path: '/export',
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/buyers': typeof AppBuyersRoute
   '/dashboard': typeof AppDashboardRoute
   '/export': typeof AppExportRoute
+  '/farms': typeof AppFarmsRoute
   '/integrations': typeof AppIntegrationsRoute
   '/inventory': typeof AppInventoryRoute
   '/invoices': typeof AppInvoicesRoute
@@ -217,6 +224,7 @@ export interface FileRoutesByTo {
   '/buyers': typeof AppBuyersRoute
   '/dashboard': typeof AppDashboardRoute
   '/export': typeof AppExportRoute
+  '/farms': typeof AppFarmsRoute
   '/integrations': typeof AppIntegrationsRoute
   '/inventory': typeof AppInventoryRoute
   '/invoices': typeof AppInvoicesRoute
@@ -248,6 +256,7 @@ export interface FileRoutesById {
   '/_app/buyers': typeof AppBuyersRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/export': typeof AppExportRoute
+  '/_app/farms': typeof AppFarmsRoute
   '/_app/integrations': typeof AppIntegrationsRoute
   '/_app/inventory': typeof AppInventoryRoute
   '/_app/invoices': typeof AppInvoicesRoute
@@ -279,6 +288,7 @@ export interface FileRouteTypes {
     | '/buyers'
     | '/dashboard'
     | '/export'
+    | '/farms'
     | '/integrations'
     | '/inventory'
     | '/invoices'
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/buyers'
     | '/dashboard'
     | '/export'
+    | '/farms'
     | '/integrations'
     | '/inventory'
     | '/invoices'
@@ -338,6 +349,7 @@ export interface FileRouteTypes {
     | '/_app/buyers'
     | '/_app/dashboard'
     | '/_app/export'
+    | '/_app/farms'
     | '/_app/integrations'
     | '/_app/inventory'
     | '/_app/invoices'
@@ -539,6 +551,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIntegrationsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/farms': {
+      id: '/_app/farms'
+      path: '/farms'
+      fullPath: '/farms'
+      preLoaderRoute: typeof AppFarmsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/export': {
       id: '/_app/export'
       path: '/export'
@@ -575,6 +594,7 @@ interface AppRouteChildren {
   AppBuyersRoute: typeof AppBuyersRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppExportRoute: typeof AppExportRoute
+  AppFarmsRoute: typeof AppFarmsRoute
   AppIntegrationsRoute: typeof AppIntegrationsRoute
   AppInventoryRoute: typeof AppInventoryRoute
   AppInvoicesRoute: typeof AppInvoicesRoute
@@ -598,6 +618,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBuyersRoute: AppBuyersRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppExportRoute: AppExportRoute,
+  AppFarmsRoute: AppFarmsRoute,
   AppIntegrationsRoute: AppIntegrationsRoute,
   AppInventoryRoute: AppInventoryRoute,
   AppInvoicesRoute: AppInvoicesRoute,

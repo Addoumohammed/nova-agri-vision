@@ -24,6 +24,8 @@ import {
   UserCircle2,
   Package,
   Boxes,
+  Sprout,
+
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -121,8 +123,10 @@ function AppLayout() {
     { to: "/products", icon: Package, label: t("nav.products") },
     { to: "/inventory", icon: Boxes, label: t("nav.inventory") },
     { to: "/suppliers", icon: Users, label: t("nav.suppliers") },
+    { to: "/farms", icon: Sprout, label: "Farms" },
     { to: "/buyers", icon: Building2, label: t("nav.buyers") },
   ];
+
   const trade: NavItem[] = [
     { to: "/rfq", icon: FileQuestion, label: "RFQ" },
     { to: "/quotations", icon: Handshake, label: "Quotations" },

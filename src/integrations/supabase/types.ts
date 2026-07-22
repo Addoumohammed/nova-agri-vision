@@ -380,50 +380,237 @@ export type Database = {
         }
         Relationships: []
       }
-      farms: {
+      farm_activities: {
+        Row: {
+          activity_type: string
+          cost: number | null
+          created_at: string
+          created_by: string | null
+          currency: string | null
+          farm_id: string
+          field_id: string | null
+          id: string
+          notes: string | null
+          occurred_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          activity_type: string
+          cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string | null
+          farm_id: string
+          field_id?: string | null
+          id?: string
+          notes?: string | null
+          occurred_at?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          activity_type?: string
+          cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string | null
+          farm_id?: string
+          field_id?: string | null
+          id?: string
+          notes?: string | null
+          occurred_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_activities_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "farm_activities_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "farm_fields"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farm_documents: {
+        Row: {
+          created_at: string
+          doc_type: string
+          expires_at: string | null
+          farm_id: string
+          id: string
+          issued_at: string | null
+          title: string
+          updated_at: string
+          uploader_id: string | null
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          doc_type?: string
+          expires_at?: string | null
+          farm_id: string
+          id?: string
+          issued_at?: string | null
+          title: string
+          updated_at?: string
+          uploader_id?: string | null
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          doc_type?: string
+          expires_at?: string | null
+          farm_id?: string
+          id?: string
+          issued_at?: string | null
+          title?: string
+          updated_at?: string
+          uploader_id?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_documents_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farm_fields: {
         Row: {
           area_hectares: number | null
+          created_at: string
+          crop: string | null
+          expected_harvest_date: string | null
+          farm_id: string
+          id: string
+          name: string
+          notes: string | null
+          planting_date: string | null
+          status: string
+          updated_at: string
+          variety: string | null
+        }
+        Insert: {
+          area_hectares?: number | null
+          created_at?: string
+          crop?: string | null
+          expected_harvest_date?: string | null
+          farm_id: string
+          id?: string
+          name: string
+          notes?: string | null
+          planting_date?: string | null
+          status?: string
+          updated_at?: string
+          variety?: string | null
+        }
+        Update: {
+          area_hectares?: number | null
+          created_at?: string
+          crop?: string | null
+          expected_harvest_date?: string | null
+          farm_id?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          planting_date?: string | null
+          status?: string
+          updated_at?: string
+          variety?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_fields_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farms: {
+        Row: {
+          address: string | null
+          area_hectares: number | null
           certifications: string[]
+          code: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
           country: string | null
           created_at: string
           crops: string[]
+          description: string | null
           id: string
+          irrigation_type: string | null
           latitude: number | null
           longitude: number | null
           name: string
           organization_id: string | null
           owner_id: string
           region: string | null
+          soil_type: string | null
+          status: string
           updated_at: string
         }
         Insert: {
+          address?: string | null
           area_hectares?: number | null
           certifications?: string[]
+          code?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           country?: string | null
           created_at?: string
           crops?: string[]
+          description?: string | null
           id?: string
+          irrigation_type?: string | null
           latitude?: number | null
           longitude?: number | null
           name: string
           organization_id?: string | null
           owner_id: string
           region?: string | null
+          soil_type?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
+          address?: string | null
           area_hectares?: number | null
           certifications?: string[]
+          code?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           country?: string | null
           created_at?: string
           crops?: string[]
+          description?: string | null
           id?: string
+          irrigation_type?: string | null
           latitude?: number | null
           longitude?: number | null
           name?: string
           organization_id?: string | null
           owner_id?: string
           region?: string | null
+          soil_type?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: [
