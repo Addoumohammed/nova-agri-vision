@@ -128,7 +128,12 @@ export type AuthErrorKey =
   | "auth.errors.rateLimit"
   | "auth.errors.network"
   | "auth.errors.noSession"
-  | "auth.errors.generic";
+  | "auth.errors.generic"
+  | "auth.errors.emailInUse"
+  | "auth.errors.passwordWeak"
+  | "auth.errors.passwordTooShort"
+  | "auth.errors.passwordTooLong"
+  | "auth.errors.signupFailed";
 
 export type AuthErrorField = "email" | "password";
 
