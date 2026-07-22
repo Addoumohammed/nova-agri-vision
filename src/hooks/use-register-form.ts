@@ -34,7 +34,7 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormOpts) {
   const [errors, setErrors] = useState<RegisterFieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const refs: Record<FieldKey, React.RefObject<HTMLInputElement>> = {
+  const refs: Record<FieldKey, React.RefObject<HTMLInputElement | null>> = {
     name: useRef<HTMLInputElement>(null),
     company: useRef<HTMLInputElement>(null),
     email: useRef<HTMLInputElement>(null),
