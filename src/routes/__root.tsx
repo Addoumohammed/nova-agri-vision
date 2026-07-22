@@ -14,6 +14,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ThemeProvider } from "@/lib/theme";
 import { I18nProvider } from "@/lib/i18n";
 import { RoleProvider } from "@/lib/role";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 function NotFoundComponent() {
   return (
@@ -151,7 +153,10 @@ function RootComponent() {
       <ThemeProvider>
         <I18nProvider>
           <RoleProvider>
-            <Outlet />
+            <TooltipProvider delayDuration={200}>
+              <Outlet />
+              <Toaster />
+            </TooltipProvider>
           </RoleProvider>
         </I18nProvider>
       </ThemeProvider>

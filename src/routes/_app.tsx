@@ -178,8 +178,8 @@ function AppLayout() {
       >
         <div className="h-16 px-5 flex items-center justify-between border-b border-sidebar-border">
           <BrandMark />
-          <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setOpen(false)}>
-            <X className="h-4 w-4" />
+          <Button size="icon" variant="ghost" className="lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu">
+            <X className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
 
@@ -215,16 +215,19 @@ function AppLayout() {
       <div className="flex-1 min-w-0 flex flex-col">
         <header className="sticky top-0 z-20 h-16 border-b border-border glass">
           <div className="h-full px-4 sm:px-6 flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)}>
-              <Menu className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu">
+              <Menu className="h-5 w-5" aria-hidden="true" />
             </Button>
-            <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md" role="search">
+              <label htmlFor="global-search" className="sr-only">Search Nova Pro</label>
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
+                id="global-search"
                 placeholder="Search markets, shipments, insights…"
                 className="ps-9 bg-card/60"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                autoComplete="off"
               />
             </form>
             <div className="ms-auto flex items-center gap-1">
