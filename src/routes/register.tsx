@@ -112,19 +112,29 @@ function RegisterPage() {
         </div>
 
         <div className="flex-1 flex items-center justify-center">
-          <form className="w-full max-w-sm space-y-4" onSubmit={handleSubmit}>
+          <form className="w-full max-w-sm space-y-4" onSubmit={handleSubmit} noValidate aria-busy={loading}>
             <div>
               <h1 className="text-3xl font-display font-bold">{t("auth.register.title")}</h1>
               <p className="mt-1.5 text-sm text-muted-foreground">{t("auth.register.subtitle")}</p>
             </div>
 
-            <Field icon={User} id="name" label={t("auth.name")} value={form.name} onChange={bind("name")} />
-            <Field icon={Building2} id="company" label={t("auth.company")} value={form.company} onChange={bind("company")} />
-            <Field icon={Mail} id="email" type="email" label={t("auth.email")} value={form.email} onChange={bind("email")} />
-            <Field icon={Lock} id="password" type="password" label={t("auth.password")} value={form.password} onChange={bind("password")} />
+            <Field icon={User} id="name" autoComplete="name" label={t("auth.name")} value={form.name} onChange={bind("name")} error={errors.name} />
+            <Field icon={Building2} id="company" autoComplete="organization" label={t("auth.company")} value={form.company} onChange={bind("company")} error={errors.company} />
+            <Field icon={Mail} id="email" type="email" autoComplete="email" inputMode="email" label={t("auth.email")} value={form.email} onChange={bind("email")} error={errors.email} />
+            <Field icon={Lock} id="password" type="password" autoComplete="new-password" label={t("auth.password")} value={form.password} onChange={bind("password")} error={errors.password} hint="At least 8 characters" />
 
             <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-glow gap-2">
-              {loading ? "…" : t("auth.signUp")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  <span>Creating account…</span>
+                </>
+              ) : (
+                <>
+                  <span>{t("auth.signUp")}</span>
+                  <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+                </>
+              )}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
@@ -147,6 +157,10 @@ function Field({
   type = "text",
   value,
   onChange,
+  autoComplete,
+  inputMode,
+  error,
+  hint,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   id: string;
@@ -154,14 +168,35 @@ function Field({
   type?: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  autoComplete?: string;
+  inputMode?: "text" | "email" | "numeric" | "tel" | "url" | "search";
+  error?: string;
+  hint?: string;
 }) {
+  const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
       <div className="relative">
-        <Icon className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input id={id} type={type} required value={value} onChange={onChange} className="ps-9" />
+        <Icon className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        <Input
+          id={id}
+          type={type}
+          required
+          value={value}
+          onChange={onChange}
+          className="ps-9"
+          autoComplete={autoComplete}
+          inputMode={inputMode}
+          aria-invalid={!!error}
+          aria-describedby={describedBy}
+        />
       </div>
+      {error ? (
+        <p id={`${id}-error`} className="text-xs text-destructive">{error}</p>
+      ) : hint ? (
+        <p id={`${id}-hint`} className="text-xs text-muted-foreground">{hint}</p>
+      ) : null}
     </div>
   );
 }
