@@ -20,19 +20,40 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+const loginSchema = z.object({
+  email: z.string().trim().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
 function LoginPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
+    const parsed = loginSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      const fieldErrors: typeof errors = {};
+      for (const issue of parsed.error.issues) {
+        const key = issue.path[0] as "email" | "password";
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
+      return;
+    }
+    setErrors({});
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email: parsed.data.email,
+        password: parsed.data.password,
+      });
       if (error) {
         toast.error(error.message);
         return;
@@ -48,8 +69,12 @@ function LoginPage() {
 
   async function handleForgot(e: React.MouseEvent) {
     e.preventDefault();
-    const target = email || window.prompt("Enter your account email to reset password:") || "";
-    if (!target) return;
+    const target = email.trim();
+    if (!target || !z.string().email().safeParse(target).success) {
+      setErrors((prev) => ({ ...prev, email: "Enter your account email above, then click Forgot password" }));
+      toast.error("Enter a valid email above first");
+      return;
+    }
     const { error } = await supabase.auth.resetPasswordForEmail(target, {
       redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
     });
