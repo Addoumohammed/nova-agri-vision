@@ -735,49 +735,108 @@ export type Database = {
           },
         ]
       }
+      order_status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          from_status: Database["public"]["Enums"]["order_status"] | null
+          id: string
+          note: string | null
+          order_id: string
+          to_status: Database["public"]["Enums"]["order_status"]
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          from_status?: Database["public"]["Enums"]["order_status"] | null
+          id?: string
+          note?: string | null
+          order_id: string
+          to_status: Database["public"]["Enums"]["order_status"]
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          from_status?: Database["public"]["Enums"]["order_status"] | null
+          id?: string
+          note?: string | null
+          order_id?: string
+          to_status?: Database["public"]["Enums"]["order_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           buyer_company_id: string
+          cancelled_at: string | null
+          cancelled_reason: string | null
           created_at: string
           created_by: string | null
           currency: string
+          discount_pct: number
+          discount_usd: number
           eta: string | null
           id: string
           incoterms: string | null
           notes: string | null
           order_number: string
           status: Database["public"]["Enums"]["order_status"]
+          subtotal_usd: number
           supplier_company_id: string
+          tax_pct: number
+          tax_usd: number
           total_usd: number
           updated_at: string
         }
         Insert: {
           buyer_company_id: string
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
+          discount_pct?: number
+          discount_usd?: number
           eta?: string | null
           id?: string
           incoterms?: string | null
           notes?: string | null
           order_number?: string
           status?: Database["public"]["Enums"]["order_status"]
+          subtotal_usd?: number
           supplier_company_id: string
+          tax_pct?: number
+          tax_usd?: number
           total_usd?: number
           updated_at?: string
         }
         Update: {
           buyer_company_id?: string
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
           created_at?: string
           created_by?: string | null
           currency?: string
+          discount_pct?: number
+          discount_usd?: number
           eta?: string | null
           id?: string
           incoterms?: string | null
           notes?: string | null
           order_number?: string
           status?: Database["public"]["Enums"]["order_status"]
+          subtotal_usd?: number
           supplier_company_id?: string
+          tax_pct?: number
+          tax_usd?: number
           total_usd?: number
           updated_at?: string
         }
