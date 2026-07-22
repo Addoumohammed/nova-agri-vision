@@ -222,3 +222,63 @@ export async function sendPasswordReset(email: string): Promise<ResetResult> {
     return { ok: false, error: humanizeAuthError((err as Error)?.message) };
   }
 }
+
+/**
+ * Signup-specific error humanization — includes duplicate-account and
+ * weak-password cases that only surface during registration.
+ */
+export function humanizeSignupError(message: string | undefined | null): HumanizedAuthError {
+  const m = (message ?? "").toLowerCase();
+  if (m.includes("already registered") || m.includes("user already") || m.includes("already exists")) {
+    return { key: "auth.errors.emailInUse", field: "email" };
+  }
+  if (m.includes("password") && (m.includes("weak") || m.includes("insecure") || m.includes("pwned") || m.includes("compromised"))) {
+    return { key: "auth.errors.passwordWeak", field: "password" };
+  }
+  if (m.includes("password") && m.includes("short")) {
+    return { key: "auth.errors.passwordTooShort", field: "password" };
+  }
+  if (m.includes("invalid email") || m.includes("email address is invalid")) {
+    return { key: "auth.errors.emailInvalid", field: "email" };
+  }
+  if (m.includes("rate limit") || m.includes("too many")) {
+    return { key: "auth.errors.rateLimit" };
+  }
+  if (m.includes("network") || m.includes("fetch") || m.includes("failed to fetch")) {
+    return { key: "auth.errors.network" };
+  }
+  return { key: "auth.errors.signupFailed" };
+}
+
+// --------------------------------------------------------------------
+// Sign up
+// --------------------------------------------------------------------
+
+export interface SignUpProfile {
+  name: string;
+  company: string;
+  email: string;
+  password: string;
+}
+
+export type SignUpResult =
+  | { ok: true; needsEmailConfirmation: boolean }
+  | { ok: false; error: HumanizedAuthError };
+
+export async function signUpWithPassword(input: SignUpProfile): Promise<SignUpResult> {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: input.email,
+      password: input.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        data: { full_name: input.name, company: input.company },
+      },
+    });
+    if (error) return { ok: false, error: humanizeSignupError(error.message) };
+    return { ok: true, needsEmailConfirmation: !data.session };
+  } catch (err) {
+    return { ok: false, error: humanizeSignupError((err as Error)?.message) };
+  }
+}
+
