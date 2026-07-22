@@ -470,7 +470,8 @@ function TradePerformance() {
 function CommodityTicker() {
   const [data, setData] = useState<Commodity[]>(seedCommodities);
   useEffect(() => {
-    const id = setInterval(() => {
+    let id: ReturnType<typeof setInterval> | null = null;
+    const tick = () => {
       setData((prev) =>
         prev.map((c) => {
           const jitter = (Math.random() - 0.5) * 0.006;
@@ -479,8 +480,24 @@ function CommodityTicker() {
           return { ...c, price: nextPrice, change, spark: [...c.spark.slice(1), nextPrice] };
         })
       );
-    }, 3500);
-    return () => clearInterval(id);
+    };
+    const start = () => {
+      if (id == null) id = setInterval(tick, 3500);
+    };
+    const stop = () => {
+      if (id != null) {
+        clearInterval(id);
+        id = null;
+      }
+    };
+    // Pause ticker when the tab is hidden — saves CPU/battery on mobile.
+    const onVis = () => (document.hidden ? stop() : start());
+    start();
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, []);
 
   return (
