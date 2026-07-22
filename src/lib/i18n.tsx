@@ -152,6 +152,14 @@ const dict = {
     "market.volume": "Volume",
     "market.market": "Market",
 
+    "marketplace.title": "Marketplace",
+    "marketplace.subtitle": "Verified suppliers and export-ready agricultural products from every origin.",
+    "marketplace.sort.relevance": "Most relevant",
+    "marketplace.sort.newest": "Newest",
+    "marketplace.sort.priceAsc": "Price · low to high",
+    "marketplace.sort.priceDesc": "Price · high to low",
+    "marketplace.sort.stock": "Best stocked",
+
     "export.title": "Export",
     "export.sub": "Manage shipments, invoices and buyers",
     "export.new": "New shipment",
@@ -325,6 +333,14 @@ const dict = {
     "market.change": "24 ساعة",
     "market.volume": "الحجم",
     "market.market": "السوق",
+
+    "marketplace.title": "السوق التجاري",
+    "marketplace.subtitle": "موردون موثّقون ومنتجات زراعية جاهزة للتصدير من كل المناشئ.",
+    "marketplace.sort.relevance": "الأكثر صلة",
+    "marketplace.sort.newest": "الأحدث",
+    "marketplace.sort.priceAsc": "السعر · من الأدنى للأعلى",
+    "marketplace.sort.priceDesc": "السعر · من الأعلى للأدنى",
+    "marketplace.sort.stock": "الأكثر توفرًا",
 
     "export.title": "التصدير",
     "export.sub": "إدارة الشحنات والفواتير والمشترين",
