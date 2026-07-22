@@ -25,6 +25,76 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
+// Password policy — OWASP-aligned. Mirrors the /reset-password page so we
+// have a single source of truth for what "strong enough" means at any
+// point a password is created or changed.
+export const MIN_PASSWORD_LENGTH = 8;
+export const MAX_PASSWORD_LENGTH = 72; // Supabase / bcrypt cap
+
+export const passwordPolicySchema = z
+  .string()
+  .min(MIN_PASSWORD_LENGTH, { message: "auth.errors.passwordTooShort" })
+  .max(MAX_PASSWORD_LENGTH, { message: "auth.errors.passwordTooLong" })
+  .regex(/[a-z]/, { message: "auth.errors.passwordWeak" })
+  .regex(/[A-Z]/, { message: "auth.errors.passwordWeak" })
+  .regex(/\d/, { message: "auth.errors.passwordWeak" });
+
+export const registerSchema = z
+  .object({
+    name: z.string().trim().min(2, { message: "auth.errors.nameRequired" }).max(80),
+    company: z.string().trim().min(2, { message: "auth.errors.companyRequired" }).max(120),
+    email: emailSchema,
+    password: passwordPolicySchema,
+    confirmPassword: z.string(),
+  })
+  .refine((v) => v.password === v.confirmPassword, {
+    message: "auth.errors.passwordMismatch",
+    path: ["confirmPassword"],
+  });
+
+export type RegisterInput = z.infer<typeof registerSchema>;
+
+// --------------------------------------------------------------------
+// Password strength scoring — pure, deterministic. Consumed by any
+// password-change surface (register, reset, change-password).
+// --------------------------------------------------------------------
+
+export type PasswordStrengthLevel = 0 | 1 | 2 | 3 | 4;
+
+export interface PasswordStrength {
+  score: PasswordStrengthLevel;
+  labelKey:
+    | "auth.password.strength.tooWeak"
+    | "auth.password.strength.weak"
+    | "auth.password.strength.fair"
+    | "auth.password.strength.strong"
+    | "auth.password.strength.excellent";
+  /** Tailwind background token — semantic, dark-mode friendly. */
+  colorClass: string;
+}
+
+export function scorePassword(pw: string): PasswordStrength {
+  if (!pw) {
+    return { score: 0, labelKey: "auth.password.strength.tooWeak", colorClass: "bg-destructive" };
+  }
+  let raw = 0;
+  if (pw.length >= MIN_PASSWORD_LENGTH) raw++;
+  if (pw.length >= 12) raw++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) raw++;
+  if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) raw++;
+  const score = Math.min(4, raw) as PasswordStrengthLevel;
+  const table: Record<PasswordStrengthLevel, PasswordStrength> = {
+    0: { score: 0, labelKey: "auth.password.strength.tooWeak", colorClass: "bg-destructive" },
+    1: { score: 1, labelKey: "auth.password.strength.weak", colorClass: "bg-destructive" },
+    2: { score: 2, labelKey: "auth.password.strength.fair", colorClass: "bg-amber-500" },
+    3: { score: 3, labelKey: "auth.password.strength.strong", colorClass: "bg-primary" },
+    4: { score: 4, labelKey: "auth.password.strength.excellent", colorClass: "bg-emerald-500" },
+  };
+  return table[score];
+}
+
+
+
 // --------------------------------------------------------------------
 // Safe redirect
 // --------------------------------------------------------------------
