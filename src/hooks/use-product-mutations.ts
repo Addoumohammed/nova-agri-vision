@@ -19,9 +19,11 @@ function invalidateProducts(qc: ReturnType<typeof useQueryClient>) {
   void qc.invalidateQueries({ queryKey: ["products", "mine"] });
 }
 
-function humanize(t: (k: string) => string, message: string): string {
+type T = ReturnType<typeof useI18n>["t"];
+
+function humanize(t: T, message: string): string {
   // Server errors that are already i18n keys ("products.error.*") get looked up.
-  if (message.startsWith("products.error.")) return t(message);
+  if (message.startsWith("products.error.")) return t(message as Parameters<T>[0]);
   return message;
 }
 
