@@ -23,6 +23,7 @@ import {
   Plug,
   UserCircle2,
   Package,
+  Boxes,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
