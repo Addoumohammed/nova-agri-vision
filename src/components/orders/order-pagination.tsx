@@ -1,20 +1,34 @@
-import { useNavigate } from "@tanstack/react-router";
+import { getRouteApi } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
+
+const routeApi = getRouteApi("/_app/orders");
 
 export function OrderPagination({
   page, pageSize, total,
 }: { page: number; pageSize: number; total: number }) {
   const { t } = useI18n();
-  const navigate = useNavigate({ from: "/_app/orders" });
+  const navigate = routeApi.useNavigate();
+  const search = routeApi.useSearch();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   if (totalPages <= 1) return null;
   const from = (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
 
-  const go = (next: number) =>
-    navigate({ to: ".", search: (p) => ({ ...p, page: Math.min(Math.max(1, next), totalPages) }) });
+  const go = (next: number) => {
+    const nextPage = Math.min(Math.max(1, next), totalPages);
+    navigate({
+      to: ".",
+      search: {
+        q: search.q ?? "",
+        status: search.status ?? "all",
+        role: search.role ?? "all",
+        sort: search.sort ?? "newest",
+        page: nextPage,
+      },
+    });
+  };
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-1">

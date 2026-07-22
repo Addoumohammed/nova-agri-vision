@@ -2,7 +2,7 @@
  * Search, status, role and sort chips — every control writes straight to URL
  * search params so state is shareable and back-button friendly.
  */
-import { useNavigate } from "@tanstack/react-router";
+import { getRouteApi } from "@tanstack/react-router";
 import { Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,8 @@ import {
 } from "@/lib/orders/constants";
 import type { OrderFilters as OrderFiltersType } from "@/lib/orders/types";
 
+const routeApi = getRouteApi("/_app/orders");
+
 interface Props {
   filters: OrderFiltersType;
   totalCount: number;
@@ -24,29 +26,49 @@ interface Props {
 
 export function OrderFilters({ filters, totalCount }: Props) {
   const { t } = useI18n();
-  const navigate = useNavigate({ from: "/_app/orders" });
+  const navigate = routeApi.useNavigate();
   const [q, setQ] = useState(filters.q);
-
-  // Debounce free-text search so we don't spam the server as they type.
-  useEffect(() => {
-    const id = setTimeout(() => {
-      if (q !== filters.q) {
-        void navigate({ to: ".", search: (p) => ({ ...p, q, page: 1 }) });
-      }
-    }, 250);
-    return () => clearTimeout(id);
-  }, [q, filters.q, navigate]);
 
   useEffect(() => setQ(filters.q), [filters.q]);
 
-  const set = <K extends keyof OrderFiltersType>(k: K, v: OrderFiltersType[K]) =>
-    navigate({ to: ".", search: (p) => ({ ...p, [k]: v, page: 1 }) });
+  useEffect(() => {
+    const trimmed = q.trim();
+    if (trimmed === filters.q) return;
+    const timer = window.setTimeout(() => {
+      navigate({
+        to: ".",
+        search: {
+          q: trimmed,
+          status: filters.status,
+          role: filters.role,
+          sort: filters.sort,
+          page: 1,
+        },
+      });
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [q, filters, navigate]);
 
-  const clear = () =>
+  function patch(next: Partial<OrderFiltersType>) {
     navigate({
       to: ".",
-      search: () => ({ q: "", status: "all", role: "all", sort: "newest", page: 1 }),
+      search: {
+        q: next.q ?? filters.q,
+        status: next.status ?? filters.status,
+        role: next.role ?? filters.role,
+        sort: next.sort ?? filters.sort,
+        page: next.page ?? 1,
+      },
     });
+  }
+
+  function clearAll() {
+    setQ("");
+    navigate({
+      to: ".",
+      search: { q: "", status: "all", role: "all", sort: "newest", page: 1 },
+    });
+  }
 
   const hasFilters =
     filters.q || filters.status !== "all" || filters.role !== "all" || filters.sort !== "newest";
@@ -66,7 +88,7 @@ export function OrderFilters({ filters, totalCount }: Props) {
         </div>
 
         <div className="grid grid-cols-2 md:flex md:items-center gap-2">
-          <Select value={filters.role} onValueChange={(v) => set("role", v as OrderFiltersType["role"])}>
+          <Select value={filters.role} onValueChange={(v) => patch({ role: v as OrderFiltersType["role"] })}>
             <SelectTrigger className="md:w-[150px]" aria-label={t("orders.role")}>
               <SelectValue />
             </SelectTrigger>
@@ -77,7 +99,7 @@ export function OrderFilters({ filters, totalCount }: Props) {
             </SelectContent>
           </Select>
 
-          <Select value={filters.status} onValueChange={(v) => set("status", v as OrderFiltersType["status"])}>
+          <Select value={filters.status} onValueChange={(v) => patch({ status: v as OrderFiltersType["status"] })}>
             <SelectTrigger className="md:w-[160px]" aria-label={t("orders.status")}>
               <SelectValue />
             </SelectTrigger>
@@ -91,7 +113,7 @@ export function OrderFilters({ filters, totalCount }: Props) {
             </SelectContent>
           </Select>
 
-          <Select value={filters.sort} onValueChange={(v) => set("sort", v as OrderFiltersType["sort"])}>
+          <Select value={filters.sort} onValueChange={(v) => patch({ sort: v as OrderFiltersType["sort"] })}>
             <SelectTrigger className="md:w-[180px]" aria-label="Sort">
               <SelectValue />
             </SelectTrigger>
@@ -111,7 +133,7 @@ export function OrderFilters({ filters, totalCount }: Props) {
           {t("orders.total").replace("{count}", String(totalCount))}
         </p>
         {hasFilters ? (
-          <Button size="sm" variant="ghost" onClick={clear} className="gap-1 h-8">
+          <Button size="sm" variant="ghost" onClick={clearAll} className="gap-1 h-8">
             <X className="h-3.5 w-3.5" /> {t("orders.emptyFilters.action")}
           </Button>
         ) : null}
