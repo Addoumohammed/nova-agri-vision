@@ -342,9 +342,9 @@ function NotificationsPopover({ badge }: { badge: number }) {
             Mark all read
           </button>
         </div>
-        {smartNotifications.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">You're all caught up.</div>
-        ) : (
+        {(
+          <>
+        {(
           <ul className="max-h-96 overflow-y-auto divide-y divide-border" role="list">
             {smartNotifications.map((n) => {
               const isRead = read.has(n.id);
