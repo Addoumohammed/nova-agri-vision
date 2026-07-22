@@ -89,34 +89,34 @@ export function useFarmMutations() {
 
   const saveField = useMutation({
     mutationFn: upsertField,
-    onSuccess: (_r, vars) => { invalidateAll(qc, vars.data.farmId); toast.success("Field saved"); },
+    onSuccess: (_r, vars) => { invalidateAll(qc, (vars as { data: { farmId: string } }).data.farmId); toast.success("Field saved"); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not save field"),
   });
   const removeField = useMutation({
     mutationFn: deleteField,
-    onSuccess: (_r, vars) => { invalidateAll(qc, vars.data.farmId); toast.success("Field deleted"); },
+    onSuccess: (_r, vars) => { invalidateAll(qc, (vars as { data: { farmId: string } }).data.farmId); toast.success("Field deleted"); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not delete field"),
   });
 
   const saveActivity = useMutation({
     mutationFn: upsertActivity,
-    onSuccess: (_r, vars) => { invalidateAll(qc, vars.data.farmId); toast.success("Activity logged"); },
+    onSuccess: (_r, vars) => { invalidateAll(qc, (vars as { data: { farmId: string } }).data.farmId); toast.success("Activity logged"); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not save activity"),
   });
   const removeActivity = useMutation({
     mutationFn: deleteActivity,
-    onSuccess: (_r, vars) => { invalidateAll(qc, vars.data.farmId); toast.success("Activity removed"); },
+    onSuccess: (_r, vars) => { invalidateAll(qc, (vars as { data: { farmId: string } }).data.farmId); toast.success("Activity removed"); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not delete activity"),
   });
 
   const saveDocument = useMutation({
     mutationFn: upsertDocument,
-    onSuccess: (_r, vars) => { invalidateAll(qc, vars.data.farmId); toast.success("Document saved"); },
+    onSuccess: (_r, vars) => { invalidateAll(qc, (vars as { data: { farmId: string } }).data.farmId); toast.success("Document saved"); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not save document"),
   });
   const removeDocument = useMutation({
     mutationFn: deleteDocument,
-    onSuccess: (_r, vars) => { invalidateAll(qc, vars.data.farmId); toast.success("Document deleted"); },
+    onSuccess: (_r, vars) => { invalidateAll(qc, (vars as { data: { farmId: string } }).data.farmId); toast.success("Document deleted"); },
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not delete document"),
   });
 
