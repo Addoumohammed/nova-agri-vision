@@ -16,22 +16,22 @@ const uuid = z.string().uuid();
 
 // The Postgres check constraint enforces qty > 0; unit price >= 0. Mirror that.
 const money = z.coerce
-  .number({ invalid_type_error: "orders.error.number" })
+  .number({ invalid_type_error: "orders.error.unitPrice" })
   .finite()
-  .min(0, { message: "orders.error.nonNegative" })
-  .max(1_000_000_000, { message: "orders.error.tooLarge" });
+  .min(0, { message: "orders.error.unitPrice" })
+  .max(1_000_000_000, { message: "orders.error.unitPrice" });
 
 const positiveQty = z.coerce
-  .number({ invalid_type_error: "orders.error.number" })
+  .number({ invalid_type_error: "orders.error.quantity" })
   .finite()
-  .gt(0, { message: "orders.error.qtyPositive" })
-  .max(1_000_000_000, { message: "orders.error.tooLarge" });
+  .gt(0, { message: "orders.error.quantity" })
+  .max(1_000_000_000, { message: "orders.error.quantity" });
 
 const pct = z.coerce
-  .number({ invalid_type_error: "orders.error.number" })
+  .number({ invalid_type_error: "orders.error.pct" })
   .finite()
-  .min(0, { message: "orders.error.pctRange" })
-  .max(100, { message: "orders.error.pctRange" });
+  .min(0, { message: "orders.error.pct" })
+  .max(100, { message: "orders.error.pct" });
 
 export const orderItemInputSchema = z.object({
   productId: uuid.optional().or(z.literal("")),
