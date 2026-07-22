@@ -125,6 +125,7 @@ export function safeRedirect(path: unknown, fallback = "/dashboard"): string {
 export type AuthErrorKey =
   | "auth.errors.invalidCredentials"
   | "auth.errors.emailNotConfirmed"
+  | "auth.errors.emailInvalid"
   | "auth.errors.rateLimit"
   | "auth.errors.network"
   | "auth.errors.noSession"
