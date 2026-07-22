@@ -3,8 +3,10 @@
  * the router so results survive refreshes / share links.
  */
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
+import { getRouteApi } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+
+const routeApi = getRouteApi("/_app/market");
 
 interface Props {
   page: number;
@@ -13,7 +15,7 @@ interface Props {
 }
 
 export function MarketPagination({ page, pageSize, total }: Props) {
-  const navigate = useNavigate({ from: "/_app/market" });
+  const navigate = routeApi.useNavigate();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   if (totalPages <= 1) return null;
 

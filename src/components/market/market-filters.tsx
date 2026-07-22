@@ -2,6 +2,7 @@
  * Marketplace filters — search + categories + country + sort. Controlled via
  * TanStack Router search-param updates so state is bookmarkable / shareable.
  */
+import { Filter, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,8 @@ import { ORIGIN_COUNTRIES, SORT_OPTIONS } from "@/lib/marketplace/constants";
 import type { MarketplaceCategory, MarketplaceFilters } from "@/lib/marketplace/types";
 import { cn } from "@/lib/utils";
 
+const routeApi = getRouteApi("/_app/market");
+
 interface Props {
   filters: MarketplaceFilters;
   categories: MarketplaceCategory[];
@@ -24,7 +27,7 @@ interface Props {
 }
 
 export function MarketFilters({ filters, categories, totalCount }: Props) {
-  const navigate = useNavigate({ from: "/_app/market" });
+  const navigate = routeApi.useNavigate();
   const [qLocal, setQLocal] = useState(filters.q);
 
   // Keep local input in sync when filters are reset externally.
