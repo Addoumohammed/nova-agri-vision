@@ -31,6 +31,7 @@ import { Route as AppOrdersRouteImport } from './routes/_app.orders'
 import { Route as AppNovaAiRouteImport } from './routes/_app.nova-ai'
 import { Route as AppMarketRouteImport } from './routes/_app.market'
 import { Route as AppInvoicesRouteImport } from './routes/_app.invoices'
+import { Route as AppInventoryRouteImport } from './routes/_app.inventory'
 import { Route as AppIntegrationsRouteImport } from './routes/_app.integrations'
 import { Route as AppExportRouteImport } from './routes/_app.export'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
@@ -146,6 +147,11 @@ const AppInvoicesRoute = AppInvoicesRouteImport.update({
   path: '/invoices',
   getParentRoute: () => AppRoute,
 } as any)
+const AppInventoryRoute = AppInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppIntegrationsRoute = AppIntegrationsRouteImport.update({
   id: '/integrations',
   path: '/integrations',
@@ -183,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/export': typeof AppExportRoute
   '/integrations': typeof AppIntegrationsRoute
+  '/inventory': typeof AppInventoryRoute
   '/invoices': typeof AppInvoicesRoute
   '/market': typeof AppMarketRoute
   '/nova-ai': typeof AppNovaAiRoute
@@ -211,6 +218,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/export': typeof AppExportRoute
   '/integrations': typeof AppIntegrationsRoute
+  '/inventory': typeof AppInventoryRoute
   '/invoices': typeof AppInvoicesRoute
   '/market': typeof AppMarketRoute
   '/nova-ai': typeof AppNovaAiRoute
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/export': typeof AppExportRoute
   '/_app/integrations': typeof AppIntegrationsRoute
+  '/_app/inventory': typeof AppInventoryRoute
   '/_app/invoices': typeof AppInvoicesRoute
   '/_app/market': typeof AppMarketRoute
   '/_app/nova-ai': typeof AppNovaAiRoute
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/export'
     | '/integrations'
+    | '/inventory'
     | '/invoices'
     | '/market'
     | '/nova-ai'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/export'
     | '/integrations'
+    | '/inventory'
     | '/invoices'
     | '/market'
     | '/nova-ai'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/_app/dashboard'
     | '/_app/export'
     | '/_app/integrations'
+    | '/_app/inventory'
     | '/_app/invoices'
     | '/_app/market'
     | '/_app/nova-ai'
@@ -513,6 +525,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInvoicesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/inventory': {
+      id: '/_app/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof AppInventoryRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/integrations': {
       id: '/_app/integrations'
       path: '/integrations'
@@ -557,6 +576,7 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppExportRoute: typeof AppExportRoute
   AppIntegrationsRoute: typeof AppIntegrationsRoute
+  AppInventoryRoute: typeof AppInventoryRoute
   AppInvoicesRoute: typeof AppInvoicesRoute
   AppMarketRoute: typeof AppMarketRoute
   AppNovaAiRoute: typeof AppNovaAiRoute
@@ -579,6 +599,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppExportRoute: AppExportRoute,
   AppIntegrationsRoute: AppIntegrationsRoute,
+  AppInventoryRoute: AppInventoryRoute,
   AppInvoicesRoute: AppInvoicesRoute,
   AppMarketRoute: AppMarketRoute,
   AppNovaAiRoute: AppNovaAiRoute,

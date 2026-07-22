@@ -23,6 +23,7 @@ import {
   Plug,
   UserCircle2,
   Package,
+  Boxes,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -118,6 +119,7 @@ function AppLayout() {
   const network: NavItem[] = [
     { to: "/market", icon: Store, label: t("nav.marketplace") },
     { to: "/products", icon: Package, label: t("nav.products") },
+    { to: "/inventory", icon: Boxes, label: t("nav.inventory") },
     { to: "/suppliers", icon: Users, label: t("nav.suppliers") },
     { to: "/buyers", icon: Building2, label: t("nav.buyers") },
   ];
