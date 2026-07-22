@@ -113,7 +113,12 @@ function LoginPage() {
         </div>
 
         <div className="flex-1 flex items-center justify-center">
-          <form className="w-full max-w-sm space-y-5" onSubmit={handleSubmit}>
+          <form
+            className="w-full max-w-sm space-y-5"
+            onSubmit={handleSubmit}
+            noValidate
+            aria-busy={loading}
+          >
             <div>
               <h1 className="text-3xl font-display font-bold">{t("auth.login.title")}</h1>
               <p className="mt-1.5 text-sm text-muted-foreground">{t("auth.login.subtitle")}</p>
@@ -122,33 +127,61 @@ function LoginPage() {
             <div className="space-y-1.5">
               <Label htmlFor="email">{t("auth.email")}</Label>
               <div className="relative">
-                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="email"
+                  inputMode="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errors.email) setErrors((p) => ({ ...p, email: undefined }));
+                  }}
                   placeholder="you@company.com"
                   className="ps-9"
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? "email-error" : undefined}
                 />
               </div>
+              {errors.email && (
+                <p id="email-error" className="text-xs text-destructive">{errors.email}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="password">{t("auth.password")}</Label>
               <div className="relative">
-                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) setErrors((p) => ({ ...p, password: undefined }));
+                  }}
                   placeholder="••••••••"
-                  className="ps-9"
+                  className="ps-9 pe-10"
+                  aria-invalid={!!errors.password}
+                  aria-describedby={errors.password ? "password-error" : undefined}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  className="absolute end-2 top-1/2 -translate-y-1/2 h-8 w-8 grid place-items-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
+              {errors.password && (
+                <p id="password-error" className="text-xs text-destructive">{errors.password}</p>
+              )}
             </div>
 
             <div className="flex items-center justify-between">
@@ -161,7 +194,17 @@ function LoginPage() {
             </div>
 
             <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-glow gap-2">
-              {loading ? "…" : t("auth.signIn")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  <span>Signing in…</span>
+                </>
+              ) : (
+                <>
+                  <span>{t("auth.signIn")}</span>
+                  <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+                </>
+              )}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
