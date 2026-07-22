@@ -1,26 +1,17 @@
 import { createFileRoute, Link, redirect, useNavigate, useSearch } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Loader2,
-  Mail,
-  AlertCircle,
-  Send,
-  Clock,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Clock, Loader2, Send } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { BrandMark, LocaleToggle, ThemeToggle } from "@/components/brand";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { EmailInput } from "@/components/auth/email-input";
+import { FormAlert } from "@/components/auth/form-alert";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
+import { useForgotPasswordForm } from "@/hooks/use-forgot-password-form";
 
-// Client-side cooldown between reset requests to prevent accidental spam
-// and to reflect Supabase GoTrue's per-email throttle without hitting 429.
-const RESEND_COOLDOWN_SECONDS = 60;
-const LAST_SENT_KEY = "nova.auth.forgotSentAt";
+// ------------------------------------------------------------------
+// Route — signed-in visitors have no reason to be here.
+// ------------------------------------------------------------------
 
 const searchSchema = z.object({ email: z.string().optional() }).partial();
 
@@ -29,359 +20,224 @@ export const Route = createFileRoute("/forgot-password")({
   validateSearch: (s) => searchSchema.parse(s),
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
-    // If already signed in, sending a recovery email is nonsensical.
     if (data.user) throw redirect({ to: "/dashboard" });
   },
   component: ForgotPasswordPage,
 });
 
-const emailSchema = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .min(1, "Email is required")
-  .email("Please enter a valid email address")
-  .max(254, "Email is too long");
+// ------------------------------------------------------------------
+// Component — presentation only. All logic lives in the hook and in
+// lib/auth/service.ts.
+// ------------------------------------------------------------------
 
-function humanize(msg: string): string {
-  const m = msg.toLowerCase();
-  if (m.includes("rate limit") || m.includes("too many") || m.includes("over_email_send"))
-    return "Too many reset requests. Please wait a minute and try again.";
-  if (m.includes("network") || m.includes("fetch"))
-    return "Network error. Check your connection and try again.";
-  return msg || "Could not send reset email. Please try again.";
-}
-
-function readLastSentAt(email: string): number {
-  try {
-    const raw = localStorage.getItem(LAST_SENT_KEY);
-    if (!raw) return 0;
-    const parsed = JSON.parse(raw) as { email?: string; at?: number };
-    if (parsed.email !== email.toLowerCase()) return 0;
-    return typeof parsed.at === "number" ? parsed.at : 0;
-  } catch {
-    return 0;
-  }
-}
-
-function writeLastSentAt(email: string) {
-  try {
-    localStorage.setItem(
-      LAST_SENT_KEY,
-      JSON.stringify({ email: email.toLowerCase(), at: Date.now() }),
-    );
-  } catch {
-    /* storage unavailable */
-  }
+function fmt(template: string, vars: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ""));
 }
 
 function ForgotPasswordPage() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const search = useSearch({ from: "/forgot-password" });
 
-  const [email, setEmail] = useState(search.email ?? "");
-  const [error, setError] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [sentTo, setSentTo] = useState<string | null>(null);
-  const [cooldown, setCooldown] = useState(0);
-
-  const emailRef = useRef<HTMLInputElement>(null);
-  const submittingRef = useRef(false);
-
-  // Autofocus and restore any pending cooldown for this email
-  useEffect(() => {
-    requestAnimationFrame(() => emailRef.current?.focus());
-  }, []);
-
-  // Cooldown ticker
-  useEffect(() => {
-    if (cooldown <= 0) return;
-    const id = window.setInterval(() => {
-      setCooldown((c) => (c <= 1 ? 0 : c - 1));
-    }, 1000);
-    return () => window.clearInterval(id);
-  }, [cooldown]);
-
-  // Recompute cooldown whenever the email changes so returning to the page
-  // with a pending timer still reflects it.
-  useEffect(() => {
-    const parsed = emailSchema.safeParse(email);
-    if (!parsed.success) {
-      setCooldown(0);
-      return;
-    }
-    const last = readLastSentAt(parsed.data);
-    const elapsed = Math.floor((Date.now() - last) / 1000);
-    const remaining = RESEND_COOLDOWN_SECONDS - elapsed;
-    setCooldown(remaining > 0 ? remaining : 0);
-  }, [email]);
-
-  const clearError = useCallback(() => {
-    if (error) setError(null);
-    if (formError) setFormError(null);
-  }, [error, formError]);
-
-  async function sendReset(target: string) {
-    const { error: err } = await supabase.auth.resetPasswordForEmail(target, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-    });
-    if (err) throw err;
-    writeLastSentAt(target);
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (submittingRef.current || cooldown > 0) return;
-
-    const parsed = emailSchema.safeParse(email);
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "Invalid email");
-      emailRef.current?.focus();
-      return;
-    }
-
-    submittingRef.current = true;
-    setError(null);
-    setFormError(null);
-    setLoading(true);
-    try {
-      await sendReset(parsed.data);
-      setSentTo(parsed.data);
-      setSent(true);
-      setCooldown(RESEND_COOLDOWN_SECONDS);
-    } catch (err) {
-      setFormError(humanize((err as Error)?.message ?? ""));
-    } finally {
-      setLoading(false);
-      submittingRef.current = false;
-    }
-  }
-
-  async function handleResend() {
-    if (!sentTo || cooldown > 0 || submittingRef.current) return;
-    submittingRef.current = true;
-    setFormError(null);
-    setLoading(true);
-    try {
-      await sendReset(sentTo);
-      setCooldown(RESEND_COOLDOWN_SECONDS);
-    } catch (err) {
-      setFormError(humanize((err as Error)?.message ?? ""));
-    } finally {
-      setLoading(false);
-      submittingRef.current = false;
-    }
-  }
+  const form = useForgotPasswordForm({ initialEmail: search.email });
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <div className="flex items-center justify-between p-4 sm:p-6">
-        <BrandMark />
-        <div className="flex items-center gap-1">
-          <LocaleToggle />
-          <ThemeToggle />
-        </div>
+    <AuthShell>
+      <div className="w-full">
+        {!form.sent ? <RequestForm form={form} t={t} /> : (
+          <SentPanel
+            form={form}
+            t={t}
+            onBackToLogin={() => navigate({ to: "/login", replace: true })}
+          />
+        )}
       </div>
-
-      <div className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
-        <div className="w-full max-w-md">
-          {!sent ? (
-            <form
-              onSubmit={handleSubmit}
-              noValidate
-              aria-busy={loading}
-              className="space-y-6 rounded-2xl border bg-card p-6 sm:p-8 shadow-elegant"
-            >
-              <Link
-                to="/login"
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
-                Back to sign in
-              </Link>
-
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-display font-bold">Forgot your password?</h1>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Enter the email address associated with your account and we'll send you a secure link
-                  to reset your password.
-                </p>
-              </div>
-
-              {formError && (
-                <div
-                  role="alert"
-                  aria-live="assertive"
-                  className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
-                >
-                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" />
-                  <span>{formError}</span>
-                </div>
-              )}
-
-              <div className="space-y-1.5">
-                <Label htmlFor="email">Email address</Label>
-                <div className="relative">
-                  <Mail
-                    className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
-                    aria-hidden="true"
-                  />
-                  <Input
-                    id="email"
-                    ref={emailRef}
-                    type="email"
-                    autoComplete="email"
-                    inputMode="email"
-                    spellCheck={false}
-                    autoCapitalize="none"
-                    required
-                    disabled={loading}
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      clearError();
-                    }}
-                    placeholder="you@company.com"
-                    className="ps-9"
-                    aria-invalid={!!error}
-                    aria-describedby={error ? "email-error" : "email-help"}
-                    maxLength={254}
-                  />
-                </div>
-                {error ? (
-                  <p id="email-error" role="alert" className="text-xs text-destructive">
-                    {error}
-                  </p>
-                ) : (
-                  <p id="email-help" className="text-xs text-muted-foreground">
-                    We'll send a reset link if this address matches an account.
-                  </p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                disabled={loading || cooldown > 0}
-                className="w-full h-11 bg-gradient-primary shadow-glow gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                    <span>Sending reset link…</span>
-                  </>
-                ) : cooldown > 0 ? (
-                  <>
-                    <Clock className="h-4 w-4" aria-hidden="true" />
-                    <span>Try again in {cooldown}s</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" aria-hidden="true" />
-                    <span>Send reset link</span>
-                  </>
-                )}
-              </Button>
-
-              <p className="text-center text-xs text-muted-foreground">
-                Remembered your password?{" "}
-                <Link to="/login" className="text-primary font-medium hover:underline">
-                  Sign in
-                </Link>
-              </p>
-            </form>
-          ) : (
-            <div
-              className="space-y-6 rounded-2xl border bg-card p-6 sm:p-8 shadow-elegant"
-              role="region"
-              aria-label="Reset email sent"
-            >
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/10 grid place-items-center shrink-0">
-                  <CheckCircle2 className="h-5 w-5 text-primary" aria-hidden="true" />
-                </div>
-                <div className="min-w-0">
-                  <h1 className="text-xl sm:text-2xl font-display font-bold">Check your inbox</h1>
-                  <p className="mt-2 text-sm text-muted-foreground break-words">
-                    If an account exists for{" "}
-                    <span className="font-medium text-foreground break-all">{sentTo}</span>, you'll
-                    receive an email with a link to reset your password.
-                  </p>
-                </div>
-              </div>
-
-              <ol className="space-y-2 text-sm text-muted-foreground border-s ps-4 ms-1">
-                <li>Open the email from Nova Pro.</li>
-                <li>Click the secure reset link — it expires within an hour.</li>
-                <li>Choose and confirm a new password.</li>
-              </ol>
-
-              {formError && (
-                <div
-                  role="alert"
-                  aria-live="assertive"
-                  className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
-                >
-                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" />
-                  <span>{formError}</span>
-                </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleResend}
-                  disabled={loading || cooldown > 0}
-                  className="flex-1 h-11 gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                      <span>Resending…</span>
-                    </>
-                  ) : cooldown > 0 ? (
-                    <>
-                      <Clock className="h-4 w-4" aria-hidden="true" />
-                      <span>Resend in {cooldown}s</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" aria-hidden="true" />
-                      <span>Resend email</span>
-                    </>
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => navigate({ to: "/login" })}
-                  className="flex-1 h-11 bg-gradient-primary gap-2"
-                >
-                  <span>Back to sign in</span>
-                  <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
-                </Button>
-              </div>
-
-              <p className="text-xs text-muted-foreground text-center">
-                Didn't get it? Check your spam folder, or{" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSent(false);
-                    setFormError(null);
-                    requestAnimationFrame(() => emailRef.current?.focus());
-                  }}
-                  className="text-primary hover:underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-                >
-                  use a different email
-                </button>
-                .
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    </AuthShell>
   );
+
+  // --- Local subcomponents keep JSX flat while sharing hook state ------
+
+  function RequestForm({
+    form,
+    t,
+  }: {
+    form: ReturnType<typeof useForgotPasswordForm>;
+    t: ReturnType<typeof useI18n>["t"];
+  }) {
+    const buttonDisabled = form.loading || form.cooldown > 0;
+    return (
+      <form
+        onSubmit={form.submit}
+        noValidate
+        aria-busy={form.loading}
+        className="space-y-5 animate-in fade-in-0 slide-in-from-bottom-2 duration-500"
+      >
+        <Link
+          to="/login"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+          {t("auth.forgot.back")}
+        </Link>
+
+        <header>
+          <h1 className="text-2xl sm:text-3xl font-display font-bold">
+            {t("auth.forgot.title")}
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("auth.forgot.subtitle")}</p>
+        </header>
+
+        {form.formError && <FormAlert variant="error">{form.formError}</FormAlert>}
+
+        <EmailInput
+          ref={form.emailRef}
+          label={t("auth.email")}
+          value={form.email}
+          onChange={(e) => form.setEmail(e.target.value)}
+          disabled={form.loading}
+          required
+          error={form.fieldError ?? undefined}
+        />
+        {!form.fieldError && (
+          <p className="text-xs text-muted-foreground -mt-3">{t("auth.forgot.emailHelp")}</p>
+        )}
+
+        <Button
+          type="submit"
+          disabled={buttonDisabled}
+          className="w-full h-11 bg-gradient-primary shadow-glow gap-2"
+        >
+          {form.loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              <span>{t("auth.forgot.sending")}</span>
+            </>
+          ) : form.cooldown > 0 ? (
+            <>
+              <Clock className="h-4 w-4" aria-hidden="true" />
+              <span>{fmt(t("auth.forgot.cooldown"), { seconds: form.cooldown })}</span>
+            </>
+          ) : (
+            <>
+              <Send className="h-4 w-4" aria-hidden="true" />
+              <span>{t("auth.forgot.send")}</span>
+            </>
+          )}
+        </Button>
+
+        <p className="text-center text-sm text-muted-foreground">
+          {t("auth.forgot.remembered")}{" "}
+          <Link
+            to="/login"
+            className="text-primary font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+          >
+            {t("auth.signIn")}
+          </Link>
+        </p>
+      </form>
+    );
+  }
+
+  function SentPanel({
+    form,
+    t,
+    onBackToLogin,
+  }: {
+    form: ReturnType<typeof useForgotPasswordForm>;
+    t: ReturnType<typeof useI18n>["t"];
+    onBackToLogin: () => void;
+  }) {
+    const resendDisabled = form.loading || form.cooldown > 0;
+    return (
+      <section
+        role="region"
+        aria-label={t("auth.forgot.regionLabel")}
+        className="space-y-5 animate-in fade-in-0 slide-in-from-bottom-2 duration-500"
+      >
+        <div className="flex items-start gap-3">
+          <div
+            className="h-10 w-10 rounded-full bg-primary/10 grid place-items-center shrink-0"
+            aria-hidden="true"
+          >
+            <CheckCircle2 className="h-5 w-5 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-display font-bold">
+              {t("auth.forgot.sentTitle")}
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground break-words">
+              {(() => {
+                const body = t("auth.forgot.sentBody");
+                const [before, after] = body.split("{email}");
+                return (
+                  <>
+                    {before}
+                    <span className="font-medium text-foreground break-all">
+                      {form.sentTo}
+                    </span>
+                    {after}
+                  </>
+                );
+              })()}
+            </p>
+          </div>
+        </div>
+
+        <ol className="space-y-2 text-sm text-muted-foreground border-s ps-4 ms-1 list-decimal list-inside marker:text-muted-foreground">
+          <li>{t("auth.forgot.step1")}</li>
+          <li>{t("auth.forgot.step2")}</li>
+          <li>{t("auth.forgot.step3")}</li>
+        </ol>
+
+        {form.formError && <FormAlert variant="error">{form.formError}</FormAlert>}
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={form.resend}
+            disabled={resendDisabled}
+            className="flex-1 min-h-11 gap-2"
+          >
+            {form.loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <span>{t("auth.forgot.resending")}</span>
+              </>
+            ) : form.cooldown > 0 ? (
+              <>
+                <Clock className="h-4 w-4" aria-hidden="true" />
+                <span>{fmt(t("auth.forgot.resendCooldown"), { seconds: form.cooldown })}</span>
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" aria-hidden="true" />
+                <span>{t("auth.forgot.resend")}</span>
+              </>
+            )}
+          </Button>
+          <Button
+            type="button"
+            onClick={onBackToLogin}
+            className="flex-1 min-h-11 bg-gradient-primary gap-2"
+          >
+            <span>{t("auth.forgot.back")}</span>
+            <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+          </Button>
+        </div>
+
+        <p className="text-xs text-muted-foreground text-center">
+          {t("auth.forgot.spam")}{" "}
+          <button
+            type="button"
+            onClick={form.reset}
+            className="text-primary hover:underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+          >
+            {t("auth.forgot.useDifferent")}
+          </button>
+          .
+        </p>
+      </section>
+    );
+  }
 }
