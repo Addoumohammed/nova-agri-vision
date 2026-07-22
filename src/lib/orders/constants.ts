@@ -27,10 +27,10 @@ export const ORDER_STATUS_LABEL_KEYS: Record<OrderStatus, string> = {
 export const ORDER_SORT_OPTIONS: ReadonlyArray<{ value: OrderSort; labelKey: string }> = [
   { value: "newest",     labelKey: "orders.sort.newest" },
   { value: "oldest",     labelKey: "orders.sort.oldest" },
-  { value: "total_desc", labelKey: "orders.sort.totalDesc" },
-  { value: "total_asc",  labelKey: "orders.sort.totalAsc" },
-  { value: "eta_asc",    labelKey: "orders.sort.etaAsc" },
-  { value: "eta_desc",   labelKey: "orders.sort.etaDesc" },
+  { value: "total_desc", labelKey: "orders.sort.total_desc" },
+  { value: "total_asc",  labelKey: "orders.sort.total_asc" },
+  { value: "eta_asc",    labelKey: "orders.sort.eta_asc" },
+  { value: "eta_desc",   labelKey: "orders.sort.eta_desc" },
 ] as const;
 
 /**
