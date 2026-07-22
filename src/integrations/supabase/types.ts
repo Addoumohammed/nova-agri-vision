@@ -439,6 +439,7 @@ export type Database = {
       inventory: {
         Row: {
           id: string
+          low_stock_threshold: number
           product_id: string
           quantity: number
           reserved: number
@@ -448,6 +449,7 @@ export type Database = {
         }
         Insert: {
           id?: string
+          low_stock_threshold?: number
           product_id: string
           quantity?: number
           reserved?: number
@@ -457,6 +459,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          low_stock_threshold?: number
           product_id?: string
           quantity?: number
           reserved?: number
@@ -1096,6 +1099,7 @@ export type Database = {
       products: {
         Row: {
           active: boolean
+          barcode: string | null
           category_id: string | null
           created_at: string
           description: string | null
@@ -1114,6 +1118,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          barcode?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -1132,6 +1137,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          barcode?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -1495,6 +1501,86 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_id: string | null
+          movement_type: Database["public"]["Enums"]["stock_movement_type"]
+          new_qty: number
+          performed_by: string | null
+          previous_qty: number
+          product_id: string
+          quantity: number
+          reason: string | null
+          reference: string | null
+          related_movement_id: string | null
+          unit: string
+          warehouse_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_id?: string | null
+          movement_type: Database["public"]["Enums"]["stock_movement_type"]
+          new_qty?: number
+          performed_by?: string | null
+          previous_qty?: number
+          product_id: string
+          quantity: number
+          reason?: string | null
+          reference?: string | null
+          related_movement_id?: string | null
+          unit?: string
+          warehouse_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_id?: string | null
+          movement_type?: Database["public"]["Enums"]["stock_movement_type"]
+          new_qty?: number
+          performed_by?: string | null
+          previous_qty?: number
+          product_id?: string
+          quantity?: number
+          reason?: string | null
+          reference?: string | null
+          related_movement_id?: string | null
+          unit?: string
+          warehouse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_related_movement_id_fkey"
+            columns: ["related_movement_id"]
+            isOneToOne: false
+            referencedRelation: "stock_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
         ]
@@ -1881,6 +1967,12 @@ export type Database = {
         | "delivered"
         | "delayed"
         | "cancelled"
+      stock_movement_type:
+        | "in"
+        | "out"
+        | "adjust"
+        | "transfer_in"
+        | "transfer_out"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2092,6 +2184,13 @@ export const Constants = {
         "delivered",
         "delayed",
         "cancelled",
+      ],
+      stock_movement_type: [
+        "in",
+        "out",
+        "adjust",
+        "transfer_in",
+        "transfer_out",
       ],
     },
   },
