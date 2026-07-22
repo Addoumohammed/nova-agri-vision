@@ -228,14 +228,19 @@ export const requestQuoteFromProduct = createServerFn({ method: "POST" })
 
     const { data: product, error: prodErr } = await client
       .from("products")
-      .select("id, name, unit, price_usd, category:product_categories(name)")
+      .select("id, name, unit, price_usd, category:product_categories!products_category_id_fkey(name)")
       .eq("id", data.productId)
       .eq("active", true)
       .maybeSingle();
     if (prodErr) throw new Error(prodErr.message);
     if (!product) throw new Error("Product not available");
 
-    const p = product as { name: string; unit: string; price_usd: number | string; category: { name: string } | null };
+    const p = product as unknown as {
+      name: string;
+      unit: string;
+      price_usd: number | string;
+      category: { name: string } | null;
+    };
     const payload = {
       buyer_id: context.userId,
       title: `Quote request: ${p.name}`,
@@ -281,7 +286,9 @@ export const contactSupplierAboutProduct = createServerFn({ method: "POST" })
     if (prodErr) throw new Error(prodErr.message);
     if (!product) throw new Error("Product not available");
 
-    const supplier = (product as { supplier: { id: string; owner_id: string; name: string } | null }).supplier;
+    const supplier = (product as unknown as {
+      supplier: { id: string; owner_id: string; name: string } | null;
+    }).supplier;
     if (!supplier?.owner_id) throw new Error("Supplier is not reachable");
     if (supplier.owner_id === context.userId) {
       throw new Error("You cannot message your own product");

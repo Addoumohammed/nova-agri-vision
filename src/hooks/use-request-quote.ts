@@ -3,7 +3,8 @@
  * mutation lifecycle so the dialog stays purely presentational.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useServerFn } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { requestQuoteFromProduct } from "@/lib/marketplace.functions";
