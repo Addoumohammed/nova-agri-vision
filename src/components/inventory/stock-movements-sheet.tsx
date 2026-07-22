@@ -17,8 +17,8 @@ import { Button } from "@/components/ui/button";
 
 function MovementIcon({ type }: { type: StockMovementType }) {
   const cls = "h-4 w-4";
-  if (type === "in" || type === "transfer_in") return <ArrowDown className={`${cls} text-emerald-500`} />;
-  if (type === "out" || type === "transfer_out") return <ArrowUp className={`${cls} text-rose-500`} />;
+  if (type === "in") return <ArrowDown className={`${cls} text-emerald-500`} />;
+  if (type === "out") return <ArrowUp className={`${cls} text-rose-500`} />;
   if (type === "transfer_in" || type === "transfer_out") return <ArrowLeftRight className={cls} />;
   return <Sliders className={cls} />;
 }
