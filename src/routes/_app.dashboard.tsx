@@ -344,7 +344,7 @@ function NotificationsPopover({ badge }: { badge: number }) {
         </div>
         {(
           <>
-        {(
+
           <ul className="max-h-96 overflow-y-auto divide-y divide-border" role="list">
             {smartNotifications.map((n) => {
               const isRead = read.has(n.id);
