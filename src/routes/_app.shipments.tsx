@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ClientOnly } from "@tanstack/react-router";
 import { Ship, Plane, Truck, MapPin, Package } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { DataTable, type Column } from "@/components/data-table";
@@ -8,7 +9,9 @@ import { StatCard } from "@/components/stat-card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { shipments, currency, type Shipment } from "@/lib/demo-data";
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
+
+const NovaMap = lazy(() => import("@/components/nova-map"));
 
 export const Route = createFileRoute("/_app/shipments")({
   component: ShipmentsPage,
