@@ -342,46 +342,43 @@ function NotificationsPopover({ badge }: { badge: number }) {
             Mark all read
           </button>
         </div>
-        {(
-          <>
-
-          <ul className="max-h-96 overflow-y-auto divide-y divide-border" role="list">
-            {smartNotifications.map((n) => {
-              const isRead = read.has(n.id);
-              return (
-                <li
-                  key={n.id}
-                  className={cn(
-                    "p-3 flex items-start gap-3 hover:bg-muted/50 transition cursor-pointer",
-                    isRead && "opacity-60",
-                  )}
-                  onClick={() => setRead((r) => new Set(r).add(n.id))}
-                >
-                  <span className={cn(
-                    "mt-0.5 h-8 w-8 rounded-lg grid place-items-center shrink-0",
-                    n.severity === "critical" && "bg-rose-500/15 text-rose-500",
-                    n.severity === "warning" && "bg-amber-500/15 text-amber-500",
-                    n.severity === "success" && "bg-emerald-500/15 text-emerald-500",
-                    n.severity === "info" && "bg-blue-500/15 text-blue-500",
-                  )} aria-hidden>
-                    {n.severity === "critical" || n.severity === "warning"
-                      ? <AlertTriangle className="h-4 w-4" />
-                      : n.severity === "success"
-                        ? <CheckCircle2 className="h-4 w-4" />
-                        : <Info className="h-4 w-4" />}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="text-sm font-semibold truncate">{n.title}</div>
-                      <div className="text-[10px] text-muted-foreground shrink-0">{n.time}</div>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{n.body}</div>
+        <ul className="max-h-96 overflow-y-auto divide-y divide-border" role="list">
+          {smartNotifications.map((n) => {
+            const isRead = read.has(n.id);
+            return (
+              <li
+                key={n.id}
+                className={cn(
+                  "p-3 flex items-start gap-3 hover:bg-muted/50 transition cursor-pointer",
+                  isRead && "opacity-60",
+                )}
+                onClick={() => setRead((r) => new Set(r).add(n.id))}
+              >
+                <span className={cn(
+                  "mt-0.5 h-8 w-8 rounded-lg grid place-items-center shrink-0",
+                  n.severity === "critical" && "bg-rose-500/15 text-rose-500",
+                  n.severity === "warning" && "bg-amber-500/15 text-amber-500",
+                  n.severity === "success" && "bg-emerald-500/15 text-emerald-500",
+                  n.severity === "info" && "bg-blue-500/15 text-blue-500",
+                )} aria-hidden>
+                  {n.severity === "critical" || n.severity === "warning"
+                    ? <AlertTriangle className="h-4 w-4" />
+                    : n.severity === "success"
+                      ? <CheckCircle2 className="h-4 w-4" />
+                      : <Info className="h-4 w-4" />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-sm font-semibold truncate">{n.title}</div>
+                    <div className="text-[10px] text-muted-foreground shrink-0">{n.time}</div>
                   </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                  <div className="text-xs text-muted-foreground mt-0.5">{n.body}</div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+
       </PopoverContent>
     </Popover>
   );
