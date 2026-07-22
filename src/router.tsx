@@ -1,6 +1,11 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
+import {
+  RouteErrorFallback,
+  RouteNotFoundFallback,
+  RoutePendingFallback,
+} from "./components/route-fallbacks";
 
 export const getRouter = () => {
   // Production-tuned defaults:
@@ -34,6 +39,10 @@ export const getRouter = () => {
     defaultPreloadStaleTime: 0,
     defaultPendingMs: 300,
     defaultPendingMinMs: 150,
+    // Graceful fallbacks for every route — individual routes may still override.
+    defaultErrorComponent: RouteErrorFallback,
+    defaultNotFoundComponent: RouteNotFoundFallback,
+    defaultPendingComponent: RoutePendingFallback,
   });
 
   return router;
