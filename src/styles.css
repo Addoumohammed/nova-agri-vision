@@ -196,3 +196,81 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Enterprise icon system — applies to every lucide-react icon
+   (all icons render as <svg class="lucide ...">). Ensures
+   consistent sizing, alignment, crispness, and interactions.
+   ───────────────────────────────────────────────────────────── */
+@layer base {
+  svg.lucide {
+    /* Crisp, aligned rendering */
+    display: inline-block;
+    vertical-align: -0.125em;
+    flex-shrink: 0;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    shape-rendering: geometricPrecision;
+    -webkit-font-smoothing: antialiased;
+    transition:
+      transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      color 200ms ease,
+      opacity 200ms ease,
+      filter 200ms ease;
+    will-change: transform;
+  }
+
+  /* Default size fallback when no size class is provided */
+  svg.lucide:not([class*="h-"]):not([class*="w-"]):not([width]) {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  /* Accessibility: decorative icons inside labelled controls */
+  button svg.lucide,
+  a svg.lucide,
+  [role="button"] svg.lucide,
+  [role="menuitem"] svg.lucide,
+  [role="tab"] svg.lucide {
+    pointer-events: none;
+  }
+
+  /* Sharper on high-DPI displays */
+  @media (min-resolution: 2dppx) {
+    svg.lucide { stroke-width: 1.6; }
+  }
+
+  /* Interactive feedback — smooth, subtle, enterprise-grade */
+  a:hover > svg.lucide,
+  button:not(:disabled):hover > svg.lucide,
+  [role="button"]:not([aria-disabled="true"]):hover > svg.lucide,
+  .icon-interactive:hover svg.lucide {
+    transform: translateY(-1px) scale(1.04);
+  }
+
+  a:active > svg.lucide,
+  button:not(:disabled):active > svg.lucide,
+  [role="button"]:not([aria-disabled="true"]):active > svg.lucide {
+    transform: scale(0.94);
+    transition-duration: 90ms;
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    svg.lucide,
+    a:hover > svg.lucide,
+    button:hover > svg.lucide {
+      transition: none;
+      transform: none;
+    }
+  }
+
+  /* Mobile touch targets — ensure icon-only buttons are ≥40px */
+  @media (max-width: 640px) {
+    button:where([data-icon-only], .icon-only) {
+      min-width: 2.5rem;
+      min-height: 2.5rem;
+    }
+  }
+}
