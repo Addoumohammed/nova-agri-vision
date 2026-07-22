@@ -7,8 +7,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
-import { useCallback, useState } from "react";
-import { Suspense } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { z } from "zod";
 import { ContactSupplierDialog } from "@/components/market/contact-supplier-dialog";
 import { MarketFilters } from "@/components/market/market-filters";

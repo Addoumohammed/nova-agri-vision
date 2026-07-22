@@ -2,9 +2,8 @@
  * Marketplace filters — search + categories + country + sort. Controlled via
  * TanStack Router search-param updates so state is bookmarkable / shareable.
  */
-import { Filter, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { getRouteApi } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
