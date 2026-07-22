@@ -20,7 +20,7 @@ import { FarmCard } from "@/components/farms/farm-card";
 import { FarmDetailSheet } from "@/components/farms/farm-detail-sheet";
 import { FarmFiltersBar } from "@/components/farms/farm-filters";
 import { FarmFormDialog } from "@/components/farms/farm-form-dialog";
-import { farmsQueryOptions, farmStatsQueryOptions, useFarmDetail, useFarmsList } from "@/hooks/use-farms";
+import { farmsQueryOptions, farmStatsQueryOptions, useFarmsList } from "@/hooks/use-farms";
 import { FARMS_PAGE_SIZE, FARM_STATUSES } from "@/lib/farms/constants";
 import type { FarmDetail, FarmRecord } from "@/lib/farms/types";
 
@@ -93,7 +93,7 @@ function FarmsContent({ onEdit }: { onEdit: (f: FarmDetail) => void }) {
   const { filters, list, stats } = useFarmsList();
   const navigate = routeApi.useNavigate();
   const [detailId, setDetailId] = useState<string | null>(null);
-  const { data: detail } = useFarmDetail(detailId);
+
 
   const countries = useMemo(() => {
     const s = new Set<string>();
@@ -159,11 +159,10 @@ function FarmsContent({ onEdit }: { onEdit: (f: FarmDetail) => void }) {
         onOpenChange={(o) => !o && setDetailId(null)}
         onEdit={(f) => { setDetailId(null); onEdit(f); }}
       />
-      {/* eslint-disable-next-line @typescript-eslint/no-unused-expressions */}
-      {detail}
     </div>
   );
 }
+
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
