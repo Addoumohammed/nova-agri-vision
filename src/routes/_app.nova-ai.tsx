@@ -284,10 +284,15 @@ function NovaAiPage() {
   const busy = status === "submitted" || status === "streaming";
 
   const handleSend = async (overrideText?: string, hint?: string) => {
-    const text = (overrideText ?? input).trim();
-    if (!text && attachments.length === 0) return;
+    const raw = (overrideText ?? input).trim();
+    if (!raw && attachments.length === 0) return;
+    const text = raw.length > MAX_INPUT_CHARS ? raw.slice(0, MAX_INPUT_CHARS) : raw;
+    if (raw.length > MAX_INPUT_CHARS) {
+      toast.warning(`Message trimmed to ${MAX_INPUT_CHARS} characters.`);
+    }
     setInput("");
-    setSystemHint(hint);
+    systemHintRef.current = hint;
+    if (typeof window !== "undefined") window.speechSynthesis?.cancel();
     try {
       let fileList: FileList | undefined;
       if (attachments.length > 0) {
@@ -303,7 +308,7 @@ function NovaAiPage() {
     } catch (e) {
       console.error(e);
     } finally {
-      setSystemHint(undefined);
+      systemHintRef.current = undefined;
     }
   };
 
