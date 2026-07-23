@@ -100,6 +100,8 @@ const SUGGESTED = [
   "Summarize weather risk this week for Alexandria → Hamburg sea route",
 ];
 
+const MAX_INPUT_CHARS = 8000;
+
 function NovaAiPage() {
   const { dir } = useI18n();
   const [conversations, setConversations] = useState<ConvRow[]>([]);
@@ -111,17 +113,26 @@ function NovaAiPage() {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [voiceOn, setVoiceOn] = useState(false);
   const [listening, setListening] = useState(false);
-  const [systemHint, setSystemHint] = useState<string | undefined>();
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<{ stop: () => void; start: () => void } | null>(null);
+
+  // Refs read by the (stable) transport so we avoid closure-stale reads and
+  // don't rebuild the transport mid-stream.
+  const activeIdRef = useRef<string | null>(null);
+  const systemHintRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    activeIdRef.current = activeId;
+  }, [activeId]);
 
   const refreshConversations = async () => {
     try {
       const rows = await listConversations();
       setConversations(rows);
+      return rows;
     } catch (err) {
       console.error("listConversations", err);
+      return [];
     } finally {
       setLoadingConvs(false);
     }
@@ -129,6 +140,14 @@ function NovaAiPage() {
 
   useEffect(() => {
     void refreshConversations();
+  }, []);
+
+  // Cancel any in-flight speech/recognition when leaving the page.
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined") window.speechSynthesis?.cancel();
+      recognitionRef.current?.stop?.();
+    };
   }, []);
 
   // Load messages when active conversation changes.
@@ -156,26 +175,37 @@ function NovaAiPage() {
     })();
   }, [activeId]);
 
+  // Stable transport — reads current values from refs and captures the
+  // server-minted conversation id from the response header so a fresh chat
+  // stays linked to a single conversation row.
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: "/api/chat",
+        fetch: async (input, init) => {
+          const res = await fetch(input, init);
+          const cid = res.headers.get("X-Nova-Conversation-Id");
+          if (cid && !activeIdRef.current) {
+            activeIdRef.current = cid;
+            setActiveId(cid);
+          }
+          return res;
+        },
         prepareSendMessagesRequest: async ({ messages, body }) => {
           const { data } = await supabase.auth.getSession();
           const token = data.session?.access_token;
           return {
             body: {
               messages,
-              conversationId: activeId,
-              systemHint,
+              conversationId: activeIdRef.current,
+              systemHint: systemHintRef.current,
               ...(body ?? {}),
             },
             headers: token ? { Authorization: `Bearer ${token}` } : undefined,
           };
         },
       }),
-    // biome/eslint: transport is intentionally rebuilt when active conv or system hint changes
-    [activeId, systemHint],
+    [],
   );
 
   const { messages, sendMessage, status, stop, error, setMessages } = useChat({
@@ -254,10 +284,15 @@ function NovaAiPage() {
   const busy = status === "submitted" || status === "streaming";
 
   const handleSend = async (overrideText?: string, hint?: string) => {
-    const text = (overrideText ?? input).trim();
-    if (!text && attachments.length === 0) return;
+    const raw = (overrideText ?? input).trim();
+    if (!raw && attachments.length === 0) return;
+    const text = raw.length > MAX_INPUT_CHARS ? raw.slice(0, MAX_INPUT_CHARS) : raw;
+    if (raw.length > MAX_INPUT_CHARS) {
+      toast.warning(`Message trimmed to ${MAX_INPUT_CHARS} characters.`);
+    }
     setInput("");
-    setSystemHint(hint);
+    systemHintRef.current = hint;
+    if (typeof window !== "undefined") window.speechSynthesis?.cancel();
     try {
       let fileList: FileList | undefined;
       if (attachments.length > 0) {
@@ -273,7 +308,7 @@ function NovaAiPage() {
     } catch (e) {
       console.error(e);
     } finally {
-      setSystemHint(undefined);
+      systemHintRef.current = undefined;
     }
   };
 
