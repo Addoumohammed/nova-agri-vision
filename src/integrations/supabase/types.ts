@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          id: string
+          processed_at: string | null
+          reason: string | null
+          requested_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          processed_at?: string | null
+          reason?: string | null
+          requested_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          processed_at?: string | null
+          reason?: string | null
+          requested_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_conversations: {
         Row: {
           created_at: string
@@ -1361,33 +1385,51 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          company: string | null
+          country: string | null
           created_at: string
+          date_format: string | null
           default_organization_id: string | null
           full_name: string | null
           id: string
           locale: string
           phone: string | null
+          tax_id: string | null
+          timezone: string | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           avatar_url?: string | null
+          company?: string | null
+          country?: string | null
           created_at?: string
+          date_format?: string | null
           default_organization_id?: string | null
           full_name?: string | null
           id: string
           locale?: string
           phone?: string | null
+          tax_id?: string | null
+          timezone?: string | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           avatar_url?: string | null
+          company?: string | null
+          country?: string | null
           created_at?: string
+          date_format?: string | null
           default_organization_id?: string | null
           full_name?: string | null
           id?: string
           locale?: string
           phone?: string | null
+          tax_id?: string | null
+          timezone?: string | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {

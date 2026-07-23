@@ -12,6 +12,35 @@ import { RoleSwitcher } from "@/components/role-switcher";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { NotificationPreferencesPanel } from "@/components/notifications/notification-preferences-panel";
+import { ChangePasswordForm } from "@/components/profile/change-password-form";
+import { SessionsList } from "@/components/profile/sessions-list";
+import { DeleteAccountDialog } from "@/components/profile/delete-account-dialog";
+import { useProfile } from "@/hooks/use-profile";
+import { Skeleton } from "@/components/ui/skeleton";
+
+function SecuritySettingsTab() {
+  const { data: profile } = useProfile();
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+        <h3 className="font-display font-bold">Change password</h3>
+        {profile?.email ? <ChangePasswordForm email={profile.email} /> : <Skeleton className="h-32 w-full" />}
+      </div>
+      <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+        <h3 className="font-display font-bold">Active sessions</h3>
+        <SessionsList />
+      </div>
+      <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-6">
+        <h3 className="font-display font-bold text-destructive">Danger zone</h3>
+        <p className="text-sm text-muted-foreground mt-1 mb-4">
+          Permanently delete your account. This action cannot be undone.
+        </p>
+        {profile?.email && <DeleteAccountDialog email={profile.email} />}
+      </div>
+    </div>
+  );
+}
+
 
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
@@ -76,23 +105,9 @@ function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="security" className="space-y-6">
-          <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
-            <h3 className="font-display font-bold">Security</h3>
-            <SettingRow icon={<Shield className="h-4 w-4" />} label="Two-factor authentication" desc="Extra verification on sign-in"><Switch defaultChecked /></SettingRow>
-            <Separator />
-            <SettingRow label="Login alerts" desc="Notify on new device sign-in"><Switch defaultChecked /></SettingRow>
-            <Separator />
-            <div>
-              <Label>Change password</Label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-1.5">
-                <Input type="password" placeholder="Current" />
-                <Input type="password" placeholder="New" />
-                <Input type="password" placeholder="Confirm" />
-              </div>
-              <div className="mt-4 flex justify-end"><Button onClick={() => toast.success("Password updated")}>Update password</Button></div>
-            </div>
-          </div>
+          <SecuritySettingsTab />
         </TabsContent>
+
 
         <TabsContent value="billing" className="space-y-6">
           <div className="rounded-2xl border border-border bg-gradient-primary text-primary-foreground p-6">
