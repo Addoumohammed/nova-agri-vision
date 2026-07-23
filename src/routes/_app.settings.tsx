@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { RoleSwitcher } from "@/components/role-switcher";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
+import { NotificationPreferencesPanel } from "@/components/notifications/notification-preferences-panel";
 
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
@@ -71,22 +72,7 @@ function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">
-          <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
-            <h3 className="font-display font-bold">Alert preferences</h3>
-            {[
-              { l: "New orders", d: "Instant push when a buyer places an order" },
-              { l: "Shipment updates", d: "Status changes across your active shipments" },
-              { l: "Overdue invoices", d: "Daily digest of unpaid invoices" },
-              { l: "Market movements", d: "Price alerts on your watched commodities" },
-              { l: "Weather risk", d: "Severe weather in growing regions" },
-              { l: "AI recommendations", d: "Nova AI insights & opportunities" },
-            ].map((n, i) => (
-              <div key={n.l}>
-                <SettingRow label={n.l} desc={n.d}><Switch defaultChecked={i < 4} /></SettingRow>
-                {i < 5 && <Separator className="mt-5" />}
-              </div>
-            ))}
-          </div>
+          <NotificationPreferencesPanel />
         </TabsContent>
 
         <TabsContent value="security" className="space-y-6">

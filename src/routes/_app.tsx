@@ -38,6 +38,7 @@ import { useI18n } from "@/lib/i18n";
 import { useRole } from "@/lib/role";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationsPopover } from "@/components/notifications/notifications-popover";
 
 export const Route = createFileRoute("/_app")({
   ssr: false,
@@ -103,6 +104,7 @@ function AppLayout() {
       integration: "/integrations", integrations: "/integrations",
       setting: "/settings", settings: "/settings",
       profile: "/profile", account: "/profile",
+      notification: "/notifications", notifications: "/notifications", alert: "/notifications", alerts: "/notifications", inbox: "/notifications",
     };
     const match = Object.entries(map).find(([k]) => q.includes(k));
     if (match) {
@@ -143,6 +145,7 @@ function AppLayout() {
     { to: "/reports", icon: FileBarChart, label: t("nav.reports") },
   ];
   const account: NavItem[] = [
+    { to: "/notifications", icon: Bell, label: "Notifications" },
     { to: "/profile", icon: UserCircle2, label: t("nav.profile") },
     { to: "/integrations", icon: Plug, label: "Integrations" },
     { to: "/settings", icon: SettingsIcon, label: t("nav.settings") },
@@ -242,16 +245,7 @@ function AppLayout() {
               <div className="hidden md:block"><RoleSwitcher /></div>
               <LocaleToggle />
               <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Notifications"
-                className="relative"
-                onClick={() => toast.message("No new notifications", { description: "You're all caught up." })}
-              >
-                <Bell className="h-4 w-4" />
-                <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
-              </Button>
+              <NotificationsPopover />
             </div>
           </div>
         </header>
