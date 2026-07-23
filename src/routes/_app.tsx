@@ -38,6 +38,7 @@ import { useI18n } from "@/lib/i18n";
 import { useRole } from "@/lib/role";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationsPopover } from "@/components/notifications/notifications-popover";
 
 export const Route = createFileRoute("/_app")({
   ssr: false,
