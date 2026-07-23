@@ -104,6 +104,7 @@ function AppLayout() {
       integration: "/integrations", integrations: "/integrations",
       setting: "/settings", settings: "/settings",
       profile: "/profile", account: "/profile",
+      notification: "/notifications", notifications: "/notifications", alert: "/notifications", alerts: "/notifications", inbox: "/notifications",
     };
     const match = Object.entries(map).find(([k]) => q.includes(k));
     if (match) {
