@@ -12,6 +12,35 @@ import { RoleSwitcher } from "@/components/role-switcher";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { NotificationPreferencesPanel } from "@/components/notifications/notification-preferences-panel";
+import { ChangePasswordForm } from "@/components/profile/change-password-form";
+import { SessionsList } from "@/components/profile/sessions-list";
+import { DeleteAccountDialog } from "@/components/profile/delete-account-dialog";
+import { useProfile } from "@/hooks/use-profile";
+import { Skeleton } from "@/components/ui/skeleton";
+
+function SecuritySettingsTab() {
+  const { data: profile } = useProfile();
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+        <h3 className="font-display font-bold">Change password</h3>
+        {profile?.email ? <ChangePasswordForm email={profile.email} /> : <Skeleton className="h-32 w-full" />}
+      </div>
+      <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+        <h3 className="font-display font-bold">Active sessions</h3>
+        <SessionsList />
+      </div>
+      <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-6">
+        <h3 className="font-display font-bold text-destructive">Danger zone</h3>
+        <p className="text-sm text-muted-foreground mt-1 mb-4">
+          Permanently delete your account. This action cannot be undone.
+        </p>
+        {profile?.email && <DeleteAccountDialog email={profile.email} />}
+      </div>
+    </div>
+  );
+}
+
 
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
