@@ -1,81 +1,104 @@
-# Dashboard Enterprise Upgrade
 
-Rebuild `src/routes/_app.dashboard.tsx` into a Bloomberg/SAP-grade command center. Keep all existing branding, i18n, theme, routing, and other pages untouched. Use existing demo data (`src/lib/demo-data.ts`) plus new locally-defined realistic datasets for widgets that don't yet have seed data. Every widget uses existing primitives (StatCard, DataTable, StatusBadge, Progress, Card, recharts) and links/navigates to the corresponding workspace route so it's fully interactive.
+# Sprint 15 — Settings & User Profile
 
-## Layout (responsive grid)
+Both `/_app/profile` and `/_app/settings` are currently demo-only: hardcoded name/email, fake sessions, defaultValue inputs with no persistence, no password change, no avatar upload, no real role/session data. This sprint makes them fully functional against Supabase, following the same layered architecture used in prior sprints (functions → schemas → hooks → UI).
+
+## Scope
+
+**In:** Profile (identity, avatar, company), password change, sessions, roles, notification prefs (reuse), language/theme, privacy, account deletion, validation, i18n, RTL.
+**Out:** New billing/invoicing logic (keep existing UI as read-only demo), 2FA enrollment beyond status (Supabase MFA API wired later), SAML/SSO admin.
+
+## Architecture
 
 ```text
-┌────────────────────────────────────────────────────────────┐
-│ Command Bar: Global Search · Notifications · Quick Actions │
-├────────────────────────────────────────────────────────────┤
-│ 4 KPI cards: Revenue · Profit · Active Shipments · Orders  │
-├──────────────────────────────┬─────────────────────────────┤
-│ Revenue & Profit Chart       │ AI Copilot Quick Panel      │
-│ (Composed area+line, 12mo)   │ (prompt + suggestions)      │
-├──────────────────────────────┼─────────────────────────────┤
-│ Export vs Import Performance │ Live Commodity Prices       │
-│ (dual bar chart)             │ (ticker, sparklines)        │
-├──────────────────────────────┼─────────────────────────────┤
-│ Active Shipments summary     │ Weather Summary widget      │
-│ Recent Orders table          │ Calendar (upcoming ships)   │
-├──────────────────────────────┼─────────────────────────────┤
-│ Pending Approvals            │ Tasks & Reminders           │
-├──────────────────────────────┼─────────────────────────────┤
-│ Top Suppliers · Top Buyers · Country Statistics (3 cols)   │
-├──────────────────────────────┬─────────────────────────────┤
-│ Market Trends (multi-line)   │ Inventory Overview (radial) │
-├──────────────────────────────┴─────────────────────────────┤
-│ Recent Activities Timeline (full width)                    │
-└────────────────────────────────────────────────────────────┘
+src/lib/profile/
+  types.ts          Profile, UpdateProfileInput, ChangePasswordInput, PrivacyPrefs
+  schemas.ts        Zod: profile update, password policy (reuse auth/service), privacy
+src/lib/profile.functions.ts
+  getMyProfile               requireSupabaseAuth → profiles row + auth email + role list
+  updateMyProfile            validated update to profiles (full_name, company, country, phone, website, tax_id, avatar_url)
+  changeMyPassword           reauth with current pw then supabase.auth.updateUser (server-side via user client)
+  uploadAvatar               signed upload to storage bucket 'avatars' (path: {userId}/avatar.<ext>), returns public URL
+  removeAvatar
+  listMySessions             supabaseAdmin.auth.admin.listUserSessions(userId) — after admin check via has_role? No: users may list own via admin API scoped to userId (safe: only own userId)
+  revokeSession(sessionId)   supabaseAdmin.auth.admin.signOut(sessionId, 'local')
+  revokeAllOtherSessions
+  getPrivacyPrefs / savePrivacyPrefs   user_settings.prefs.privacy
+  requestAccountDeletion     inserts audit_log + calls admin.deleteUser after confirmation token match
+src/hooks/
+  use-profile.ts             useProfile, useUpdateProfile, useAvatarUpload
+  use-password.ts            useChangePassword
+  use-sessions.ts            useSessions, useRevokeSession, useRevokeAll
+  use-privacy.ts
 ```
 
-Grid: `grid-cols-1 md:grid-cols-2 xl:grid-cols-3` with `col-span` overrides for full-width rows. Mobile: single column with priority ordering (KPIs → Copilot → Shipments → Orders → rest).
+Reuse: `passwordPolicySchema`, `scorePassword` from `src/lib/auth/service.ts`; `usePreferences` from notifications hook for notification prefs tab.
 
-## Widgets
+## Storage
 
-1. **Command Bar** — sticky top: global search (Command palette via `cmdk`, already installed via shadcn), NotificationsPopover (bell + badge, list of 6 smart alerts with severity chips), Quick Actions dropdown (New RFQ, New Order, New Shipment, Invite Supplier, Ask Nova AI) — each routes to matching page.
-2. **KPI Cards (4)** — Revenue MTD, Net Profit, Active Shipments count, Open Orders. Use `StatCard` with delta %, animated count-up via simple `useEffect` + rAF.
-3. **Revenue & Profit Chart** — recharts `ComposedChart`: revenue area + profit line, 12-month, tooltip with currency formatting, range toggle (3M/6M/12M) via `FilterChips`.
-4. **AI Copilot Quick Panel** — textarea + 4 preset chips ("Forecast wheat prices", "Draft RFQ for oranges", "Explain HS code 0805", "Weather risk this week"). Submit navigates to `/nova-ai` with prefilled prompt in URL search param.
-5. **Live Commodity Prices** — 6 tickers (Wheat, Coffee, Rice, Olive Oil, Sugar, Cotton) with current price, % change, mini sparkline (recharts `LineChart`). Auto-refresh every 5s with small deterministic jitter for "live" feel.
-6. **Export vs Import Performance** — grouped bar chart, 6 months, values from `monthlyTrade`.
-7. **Active Shipments Summary** — top 4 from `shipments`, each with mode icon, route, progress bar, ETA. Row click → `/shipments`.
-8. **Recent Orders** — compact table (5 rows) using existing `DataTable` styling or inline; StatusBadge; row click → `/orders`.
-9. **Weather Summary** — 3-city cards (Cairo, Casablanca, Rotterdam) with icon, temp, condition, next-3-day mini forecast. Link to `/weather`.
-10. **Calendar / Upcoming Shipments** — mini month grid (current month) with dots on shipment ETA dates; list below shows next 5 upcoming.
-11. **Pending Approvals** — 4 items (quotation, invoice, RFQ response, contract) with Approve/Reject inline buttons (toast on click).
-12. **Tasks & Reminders** — 6 checklist items with checkboxes (local state), priority chips, due dates.
-13. **Top Suppliers / Top Buyers** — two ranked lists (top 5 each), avatar initial, volume, rating stars, click → respective pages.
-14. **Country Statistics** — reuse `topCountries` data as a card list with flag, share bar, volume.
-15. **Market Trends** — multi-line chart (3 commodities over 8 weeks) with legend toggle.
-16. **Inventory Overview** — recharts `RadialBarChart` showing stock levels per category (Fruits, Grains, Beverages, Spices, Oils).
-17. **Recent Activities Timeline** — vertical timeline, 8 events (order shipped, quotation received, invoice paid, RFQ posted, supplier verified, price alert triggered, weather warning, contract signed) with icon + time-ago.
+Create `avatars` bucket (public read, authenticated write to own folder). RLS on `storage.objects`:
+- SELECT: public
+- INSERT/UPDATE/DELETE: `auth.uid()::text = (storage.foldername(name))[1]`
+Max 2MB, image/* only, client-side resize to 512px square before upload.
 
-## Interactivity rules
+## Schema changes
 
-- All row/card clicks navigate via `<Link>` from `@tanstack/react-router`.
-- All buttons produce a `toast()` via existing `sonner` when there's no target route.
-- Notifications popover uses `Popover` (shadcn). Command palette opens on `⌘K` / `Ctrl+K` and on search-bar click.
-- Range toggles use `FilterChips`; local `useState` only, no URL params (to avoid disrupting existing route params).
-- Live commodity refresh via `setInterval` cleaned in `useEffect` return.
+`profiles` currently has `id, full_name, avatar_url` plus a few. Add via migration if missing:
+- `company text, country text, phone text, website text, tax_id text, updated_at timestamptz`
+- trigger `set_updated_at`
 
-## Files
+Add `privacy` shape into existing `user_settings.prefs` JSONB — no schema change.
 
-- **Edit**: `src/routes/_app.dashboard.tsx` (full rewrite of dashboard body only).
-- **Add**: `src/lib/dashboard-data.ts` (commodity prices seed, revenue/profit series, tasks, approvals, activities, market trends).
-- **Add** (small extracted components to keep the route readable, all in `src/components/dashboard/`):
-  - `command-bar.tsx`, `notifications-popover.tsx`, `revenue-chart.tsx`, `commodity-ticker.tsx`, `ai-quick-panel.tsx`, `weather-summary.tsx`, `mini-calendar.tsx`, `approvals-list.tsx`, `tasks-list.tsx`, `top-partners.tsx`, `market-trends.tsx`, `inventory-radial.tsx`, `activity-timeline.tsx`, `trade-performance.tsx`.
+## UI
 
-## i18n
+### `/_app/profile` — personal identity only
+- Header card: real avatar (from `profiles.avatar_url`), name, email (readonly, from auth), role badges (from `user_roles`), "Change photo" opens `AvatarUploadDialog`.
+- **Personal info** section: full_name, phone, country (Zod validated, Save button disabled until dirty).
+- **Company info** section: company, tax_id, website.
+- **Stats strip**: keep, but derive real counts (orders, shipments) via lightweight aggregates — if too broad, leave demo but mark as computed.
 
-Add new keys to `src/lib/i18n.tsx` (EN + AR) for every visible label (widget titles, chip labels, button text, empty states). RTL respected via existing wrappers — verify with `dir="rtl"` toggle.
+Remove billing/security/settings tabs from Profile — those move to Settings.
+
+### `/_app/settings` — workspace + account controls
+Tabs (shadcn `Tabs`):
+1. **General** — company profile (shared with profile? keep here for admin; profile page owns personal). Language, Theme, Timezone, Date format.
+2. **Notifications** — existing `NotificationPreferencesPanel`.
+3. **Security**
+   - Change password form: current + new + confirm, strength meter, HIBP handled by Supabase policy.
+   - Sessions list (real): device, browser (parse UA), IP, last seen, "current" badge, Revoke, "Sign out other sessions".
+   - 2FA status card (show enabled/disabled from `supabase.auth.mfa.listFactors()`, link "Manage" that is a placeholder unless user asks to build enrollment now).
+4. **Privacy** — profile visibility, analytics opt-in, marketing emails, data export request button (emails ZIP later — for now trigger `requestDataExport` server fn that inserts a row and toasts).
+5. **Roles & access** — visible only to admins (via `has_role`): list workspace members from `organization_members`, change role dropdown, invite by email (creates pending row).
+6. **Billing** — keep existing demo UI unchanged.
+7. **Danger zone** — delete account with typed-confirmation ("delete my account"), calls `requestAccountDeletion`.
+
+Remove the demo `RoleSwitcher` from settings (it's a dev tool) — move behind `import.meta.env.DEV`.
+
+## Validation & security
+
+- All mutations go through Zod on server (`inputValidator`) and client (react-hook-form + zodResolver).
+- Password change: verify current password by re-signing in with `signInWithPassword` before `updateUser`; on success invalidate other sessions.
+- Avatar upload: MIME sniff + size check server-side rejection if bucket policy insufficient.
+- Session revoke: only allow revoking sessions owned by `context.userId`.
+- Account deletion: require typed confirmation + password re-entry; server fn re-verifies password then `supabaseAdmin.auth.admin.deleteUser`.
+- Admin-only tabs gated by `has_role('admin')` server check, not client-only.
 
 ## Performance
 
-- Lazy-load heavy chart widgets below the fold via `React.lazy` + `Suspense` with skeleton fallbacks (recharts is heavy).
-- Memoize computed series with `useMemo`.
-- Avoid layout shift with fixed-height chart containers.
+- TanStack Query with keyed caches per userId; `staleTime: 60s` for profile, `30s` for sessions.
+- Avatar image: `loading="lazy"`, resized before upload → single ~50KB PNG.
+- Split settings tabs with `React.lazy` per panel.
 
-## Out of scope
+## i18n
 
-No new backend calls, no schema changes, no changes to other pages, no auth/routing changes, no branding/color/typography edits.
+Add `settings.*` and `profile.*` keys in both `en` and `ar`; verify RTL layout on session rows and toggles.
+
+## Deliverables checklist
+
+- [ ] Migration: extend `profiles`, create `avatars` bucket + policies
+- [ ] `src/lib/profile/{types,schemas}.ts`, `src/lib/profile.functions.ts`
+- [ ] Hooks: `use-profile`, `use-password`, `use-sessions`, `use-privacy`
+- [ ] Components: `AvatarUploadDialog`, `ChangePasswordForm`, `SessionsList`, `PrivacyPanel`, `RoleManagementPanel`, `DeleteAccountDialog`
+- [ ] Rewritten `src/routes/_app.profile.tsx` and `src/routes/_app.settings.tsx`
+- [ ] i18n keys en/ar
+- [ ] Typecheck + manual smoke: update name, upload avatar, change password, revoke session, toggle prefs, switch language/theme, delete-account confirmation gate
