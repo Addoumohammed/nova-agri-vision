@@ -242,16 +242,7 @@ function AppLayout() {
               <div className="hidden md:block"><RoleSwitcher /></div>
               <LocaleToggle />
               <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Notifications"
-                className="relative"
-                onClick={() => toast.message("No new notifications", { description: "You're all caught up." })}
-              >
-                <Bell className="h-4 w-4" />
-                <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
-              </Button>
+              <NotificationsPopover />
             </div>
           </div>
         </header>
