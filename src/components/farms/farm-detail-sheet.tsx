@@ -6,7 +6,8 @@ import {
   BadgeCheck, Calendar, Droplets, FileText, Layers, Loader2, MapPin, Pencil,
   Plus, Sprout, Trash2, Ruler, Mail, Phone, ExternalLink, AlertTriangle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +23,8 @@ import { FieldFormDialog } from "./field-form-dialog";
 import { ActivityFormDialog } from "./activity-form-dialog";
 import { DocumentFormDialog } from "./document-form-dialog";
 import { cn } from "@/lib/utils";
+
+const NovaMap = lazy(() => import("@/components/nova-map"));
 
 interface Props {
   farmId: string | null;
