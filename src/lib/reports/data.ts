@@ -200,7 +200,8 @@ const PRODUCTS_REPORT: ReportDef<typeof products[number]> = {
   ],
 };
 
-const COUNTRIES_REPORT: ReportDef<typeof topCountries[number]> = {
+type CountryRow = { country: string; volume: number; share: number };
+const COUNTRIES_REPORT: ReportDef<CountryRow> = {
   id: "top_destinations",
   name: "Top Export Destinations",
   category: "trade",
@@ -210,7 +211,7 @@ const COUNTRIES_REPORT: ReportDef<typeof topCountries[number]> = {
     { key: "volume", label: "Volume (USD)", align: "right" },
     { key: "share", label: "Share %", align: "right" },
   ],
-  rows: () => topCountries.map(({ flag: _f, ...r }) => r),
+  rows: () => topCountries.map((c) => ({ country: c.country, volume: c.volume, share: c.share })),
   summary: (rs) => [
     { label: "Countries", value: rs.length.toLocaleString() },
     { label: "Total volume", value: currency(rs.reduce((s, r) => s + r.volume, 0)) },
