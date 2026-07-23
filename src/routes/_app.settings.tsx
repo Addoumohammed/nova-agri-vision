@@ -76,23 +76,9 @@ function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="security" className="space-y-6">
-          <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
-            <h3 className="font-display font-bold">Security</h3>
-            <SettingRow icon={<Shield className="h-4 w-4" />} label="Two-factor authentication" desc="Extra verification on sign-in"><Switch defaultChecked /></SettingRow>
-            <Separator />
-            <SettingRow label="Login alerts" desc="Notify on new device sign-in"><Switch defaultChecked /></SettingRow>
-            <Separator />
-            <div>
-              <Label>Change password</Label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-1.5">
-                <Input type="password" placeholder="Current" />
-                <Input type="password" placeholder="New" />
-                <Input type="password" placeholder="Confirm" />
-              </div>
-              <div className="mt-4 flex justify-end"><Button onClick={() => toast.success("Password updated")}>Update password</Button></div>
-            </div>
-          </div>
+          <SecuritySettingsTab />
         </TabsContent>
+
 
         <TabsContent value="billing" className="space-y-6">
           <div className="rounded-2xl border border-border bg-gradient-primary text-primary-foreground p-6">
