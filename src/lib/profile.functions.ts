@@ -79,16 +79,17 @@ export const updateMyProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => updateProfileSchema.parse(d))
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = {};
+    type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
+    const patch: ProfileUpdate = {};
     if (data.fullName !== undefined) patch.full_name = data.fullName || null;
     if (data.phone !== undefined) patch.phone = data.phone || null;
-    if (data.company !== undefined) patch.company = data.company || null;
-    if (data.country !== undefined) patch.country = data.country || null;
-    if (data.website !== undefined) patch.website = data.website || null;
-    if (data.taxId !== undefined) patch.tax_id = data.taxId || null;
+    if (data.company !== undefined) (patch as Record<string, unknown>).company = data.company || null;
+    if (data.country !== undefined) (patch as Record<string, unknown>).country = data.country || null;
+    if (data.website !== undefined) (patch as Record<string, unknown>).website = data.website || null;
+    if (data.taxId !== undefined) (patch as Record<string, unknown>).tax_id = data.taxId || null;
     if (data.locale !== undefined) patch.locale = data.locale;
-    if (data.timezone !== undefined) patch.timezone = data.timezone || null;
-    if (data.dateFormat !== undefined) patch.date_format = data.dateFormat || null;
+    if (data.timezone !== undefined) (patch as Record<string, unknown>).timezone = data.timezone || null;
+    if (data.dateFormat !== undefined) (patch as Record<string, unknown>).date_format = data.dateFormat || null;
 
     const { error } = await context.supabase.from("profiles").update(patch).eq("id", context.userId);
     if (error) throw new Error(error.message);
