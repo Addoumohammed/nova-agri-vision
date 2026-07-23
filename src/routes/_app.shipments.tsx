@@ -78,6 +78,7 @@ function ShipmentsPage() {
         <ClientOnly fallback={<div className="h-[360px] rounded-lg bg-muted/30 animate-pulse" />}>
           <Suspense fallback={<div className="h-[360px] rounded-lg bg-muted/30 animate-pulse" />}>
             <NovaMap
+              enableWeatherLayer
               routes={filtered.slice(0, 8).map((s) => ({
                 id: s.id,
                 label: `${s.id} · ${s.carrier}`,

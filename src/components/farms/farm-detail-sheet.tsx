@@ -6,7 +6,8 @@ import {
   BadgeCheck, Calendar, Droplets, FileText, Layers, Loader2, MapPin, Pencil,
   Plus, Sprout, Trash2, Ruler, Mail, Phone, ExternalLink, AlertTriangle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +23,8 @@ import { FieldFormDialog } from "./field-form-dialog";
 import { ActivityFormDialog } from "./activity-form-dialog";
 import { DocumentFormDialog } from "./document-form-dialog";
 import { cn } from "@/lib/utils";
+
+const NovaMap = lazy(() => import("@/components/nova-map"));
 
 interface Props {
   farmId: string | null;
@@ -148,6 +151,45 @@ export function FarmDetailSheet({ farmId, open, onOpenChange, onEdit, onDeleted 
                           <BadgeCheck className="h-3 w-3" /> {c}
                         </span>
                       ))}
+                    </div>
+                  </div>
+                )}
+                {typeof data.latitude === "number" && typeof data.longitude === "number" && (
+                  <div className="rounded-xl border border-border bg-card/50 p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className="text-xs font-medium uppercase text-muted-foreground">Location</div>
+                      <a
+                        href={`https://www.google.com/maps?q=${data.latitude},${data.longitude}`}
+                        target="_blank" rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline"
+                      >
+                        Open in Google Maps <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                    <ClientOnly fallback={<div className="h-[240px] rounded-lg bg-muted/30 animate-pulse" />}>
+                      <Suspense fallback={<div className="h-[240px] rounded-lg bg-muted/30 animate-pulse" />}>
+                        <NovaMap
+                          height={240}
+                          enableWeatherLayer
+                          markers={[{
+                            id: data.id,
+                            lat: data.latitude,
+                            lon: data.longitude,
+                            label: data.name,
+                            description: [data.region, data.country].filter(Boolean).join(", ") || undefined,
+                          }]}
+                          polygons={data.fields
+                            .filter((f) => Array.isArray((f as any).boundary) && (f as any).boundary.length >= 3)
+                            .map((f) => ({
+                              id: f.id,
+                              label: f.name,
+                              path: (f as any).boundary as Array<{ lat: number; lon: number }>,
+                            }))}
+                        />
+                      </Suspense>
+                    </ClientOnly>
+                    <div className="mt-1 text-[10px] text-muted-foreground font-mono">
+                      {data.latitude.toFixed(4)}, {data.longitude.toFixed(4)}
                     </div>
                   </div>
                 )}
