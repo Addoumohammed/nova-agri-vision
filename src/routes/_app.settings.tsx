@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { RoleSwitcher } from "@/components/role-switcher";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
+import { NotificationPreferencesPanel } from "@/components/notifications/notification-preferences-panel";
 
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
