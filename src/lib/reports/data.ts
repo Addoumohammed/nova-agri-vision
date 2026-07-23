@@ -218,7 +218,7 @@ const COUNTRIES_REPORT: ReportDef<CountryRow> = {
   ],
 };
 
-export const REPORTS = [
+export const REPORTS: ReportDef<any>[] = [
   ORDERS_REPORT,
   INVOICES_REPORT,
   SHIPMENTS_REPORT,
@@ -226,7 +226,7 @@ export const REPORTS = [
   BUYERS_REPORT,
   PRODUCTS_REPORT,
   COUNTRIES_REPORT,
-] as const;
+];
 
 export const CATEGORY_LABEL: Record<ReportCategory, string> = {
   trade: "Trade",
