@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import type { Database } from "@/integrations/supabase/types";
 import { updateProfileSchema, privacySchema } from "@/lib/profile/schemas";
 import type { FullProfile, SessionInfo, PrivacyPreferences, AppRole } from "@/lib/profile/types";
 import { DEFAULT_PRIVACY } from "@/lib/profile/types";
