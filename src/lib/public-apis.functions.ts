@@ -388,7 +388,7 @@ export const sendPush = createServerFn({ method: "POST" })
       });
       const json = await safeJson<{ success?: number; failure?: number; results?: unknown[] }>(r);
       if (!r.ok) return ERR(`http_${r.status}`);
-      if (json?.failure && json.failure > 0) return ERR("delivery_failure", { results: json.results });
+      if (json?.failure && json.failure > 0) return ERR("delivery_failure", { failures: json.failure });
       return OK({ success: json?.success ?? 0 });
     } catch (e) {
       return ERR((e as Error).message);
