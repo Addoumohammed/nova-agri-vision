@@ -15,8 +15,9 @@ import { createServerFn } from "@tanstack/react-start";
  */
 
 // ------------------------------ Result helpers ------------------------------
+type ErrMeta = Record<string, string | number | null | undefined>;
 const OK = <T,>(data: T) => ({ ok: true as const, data });
-const ERR = (reason: string, meta?: Record<string, unknown>) => ({
+const ERR = (reason: string, meta?: ErrMeta) => ({
   ok: false as const,
   reason,
   ...(meta ? { meta } : {}),
